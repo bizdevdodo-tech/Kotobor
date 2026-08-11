@@ -1,9 +1,7 @@
 <!doctype html>
 <html lang="ru">
-
 <head>
   <meta charset="UTF-8" />
-
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1, viewport-fit=cover"
@@ -39,7 +37,6 @@
       min-height: 100%;
       background: var(--bg);
       color: var(--text);
-
       font-family:
         -apple-system,
         BlinkMacSystemFont,
@@ -56,7 +53,8 @@
     }
 
     button,
-    input {
+    input,
+    textarea {
       font: inherit;
     }
 
@@ -69,33 +67,25 @@
       max-width: 520px;
       min-height: 100vh;
       margin: 0 auto;
-      padding-bottom: 94px;
+      padding-bottom: 96px;
     }
 
     .header {
       position: sticky;
       top: 0;
       z-index: 20;
-
       display: flex;
       align-items: center;
       justify-content: space-between;
-
-      padding:
-        14px
-        16px
-        12px;
-
+      padding: 14px 16px 12px;
       background:
         linear-gradient(
           to bottom,
           rgba(11,12,16,.98),
           rgba(11,12,16,.90),
-          rgba(11,12,16,.20)
+          rgba(11,12,16,.18)
         );
-
-      backdrop-filter:
-        blur(18px);
+      backdrop-filter: blur(18px);
     }
 
     .brand {
@@ -107,14 +97,10 @@
     .brand-icon {
       width: 42px;
       height: 42px;
-
       border-radius: 14px;
-
       display: grid;
       place-items: center;
-
       font-size: 24px;
-
       background:
         linear-gradient(
           135deg,
@@ -135,32 +121,16 @@
     }
 
     .votes-pill {
-      padding:
-        9px
-        13px;
-
-      border-radius:
-        999px;
-
-      background:
-        var(--card2);
-
-      border:
-        1px solid
-        var(--line);
-
-      font-size:
-        14px;
-
-      font-weight:
-        900;
+      padding: 9px 13px;
+      border-radius: 999px;
+      background: var(--card2);
+      border: 1px solid var(--line);
+      font-size: 14px;
+      font-weight: 900;
     }
 
     .content {
-      padding:
-        6px
-        14px
-        30px;
+      padding: 6px 14px 30px;
     }
 
     .page {
@@ -172,35 +142,17 @@
     }
 
     .section-title {
-      margin:
-        10px
-        2px
-        14px;
-
-      font-size:
-        25px;
-
-      font-weight:
-        950;
-
-      letter-spacing:
-        -.7px;
+      margin: 10px 2px 14px;
+      font-size: 25px;
+      font-weight: 950;
+      letter-spacing: -.7px;
     }
 
     .section-subtitle {
-      margin:
-        -6px
-        2px
-        18px;
-
-      color:
-        var(--muted);
-
-      font-size:
-        14px;
-
-      line-height:
-        1.5;
+      margin: -6px 2px 18px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
     }
 
     .card {
@@ -210,24 +162,14 @@
           var(--card2),
           var(--card)
         );
-
-      border:
-        1px solid
-        var(--line);
-
-      border-radius:
-        23px;
-
-      box-shadow:
-        var(--shadow);
+      border: 1px solid var(--line);
+      border-radius: 23px;
+      box-shadow: var(--shadow);
     }
 
     .battle-title {
       text-align: center;
-      margin:
-        10px
-        0
-        16px;
+      margin: 10px 0 16px;
     }
 
     .battle-title strong {
@@ -243,51 +185,32 @@
 
     .battle {
       position: relative;
-
       display: grid;
-
-      grid-template-columns:
-        1fr
-        1fr;
-
+      grid-template-columns: 1fr 1fr;
       gap: 10px;
     }
 
     .cat-card {
       position: relative;
-
       height: 390px;
-
       padding: 0;
-
       overflow: hidden;
-
       border: 0;
-
       border-radius: 24px;
-
       background: #151515;
-
       color: white;
     }
 
     .cat-card img {
       width: 100%;
       height: 100%;
-
       object-fit: cover;
     }
 
     .cat-gradient {
       position: absolute;
-
-      inset:
-        auto
-        0
-        0;
-
+      inset: auto 0 0;
       height: 45%;
-
       background:
         linear-gradient(
           to top,
@@ -298,16 +221,12 @@
 
     .cat-name {
       position: absolute;
-
       left: 13px;
       right: 13px;
       bottom: 14px;
-
       font-size: 20px;
       font-weight: 950;
-
       text-align: left;
-
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
@@ -316,46 +235,24 @@
     .vs {
       position: absolute;
       z-index: 5;
-
       left: 50%;
       top: 44%;
-
-      transform:
-        translate(
-          -50%,
-          -50%
-        );
-
+      transform: translate(-50%, -50%);
       width: 48px;
       height: 48px;
-
       display: grid;
       place-items: center;
-
       border-radius: 50%;
-
-      border:
-        4px solid
-        var(--bg);
-
-      background:
-        var(--accent);
-
-      font-weight:
-        950;
+      border: 4px solid var(--bg);
+      background: var(--accent);
+      font-weight: 950;
     }
 
     .battle-help {
       margin-top: 15px;
-
-      color:
-        var(--muted);
-
-      font-size:
-        13px;
-
-      text-align:
-        center;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
     }
 
     .timer-box {
@@ -366,35 +263,19 @@
 
     .timer-box strong {
       display: block;
-
       margin-top: 7px;
-
-      font-size:
-        23px;
+      font-size: 23px;
     }
 
     .btn {
       width: 100%;
-
       margin-top: 10px;
-
-      padding:
-        15px
-        16px;
-
+      padding: 15px 16px;
       border: 0;
-
-      border-radius:
-        16px;
-
-      background:
-        var(--card2);
-
-      color:
-        white;
-
-      font-weight:
-        900;
+      border-radius: 16px;
+      background: var(--card2);
+      color: white;
+      font-weight: 900;
     }
 
     .btn-primary {
@@ -407,16 +288,12 @@
     }
 
     .btn-success {
-      background:
-        var(--success);
-
-      color:
-        #06140d;
+      background: var(--success);
+      color: #06140d;
     }
 
     .btn-danger {
-      background:
-        var(--danger);
+      background: var(--danger);
     }
 
     .ranking-list {
@@ -425,26 +302,12 @@
 
     .rank-row {
       min-height: 66px;
-
       display: grid;
-
-      grid-template-columns:
-        48px
-        48px
-        1fr
-        auto;
-
+      grid-template-columns: 48px 48px 1fr auto;
       gap: 9px;
-
       align-items: center;
-
-      padding:
-        9px
-        12px;
-
-      border-bottom:
-        1px solid
-        var(--line);
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--line);
     }
 
     .rank-row:last-child {
@@ -460,70 +323,37 @@
     .rank-photo {
       width: 46px;
       height: 46px;
-
-      border-radius:
-        14px;
-
-      object-fit:
-        cover;
+      border-radius: 14px;
+      object-fit: cover;
     }
 
     .rank-name {
-      font-weight:
-        900;
+      font-weight: 900;
     }
 
     .rank-meta {
-      margin-top:
-        3px;
-
-      color:
-        var(--muted);
-
-      font-size:
-        12px;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
     }
 
     .rank-rate {
-      color:
-        var(--muted);
-
-      font-size:
-        13px;
-
-      font-weight:
-        850;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 850;
     }
 
     .rank-row.mine {
-      border-left:
-        3px solid
-        var(--accent);
-
-      background:
-        rgba(
-          255,
-          101,
-          53,
-          .10
-        );
+      border-left: 3px solid var(--accent);
+      background: rgba(255,101,53,.10);
     }
 
     .my-cat-photo {
       width: 100%;
-
-      aspect-ratio:
-        1 / 1;
-
+      aspect-ratio: 1 / 1;
       display: block;
-
       object-fit: cover;
-
-      border-radius:
-        23px
-        23px
-        0
-        0;
+      border-radius: 23px 23px 0 0;
     }
 
     .my-cat-info {
@@ -531,106 +361,55 @@
     }
 
     .my-cat-name {
-      font-size:
-        28px;
-
-      font-weight:
-        950;
+      font-size: 28px;
+      font-weight: 950;
     }
 
     .status {
-      display:
-        inline-block;
-
-      margin-top:
-        8px;
-
-      padding:
-        6px
-        10px;
-
-      border-radius:
-        999px;
-
-      background:
-        rgba(
-          255,
-          255,
-          255,
-          .06
-        );
-
-      font-size:
-        12px;
-
-      font-weight:
-        900;
+      display: inline-block;
+      margin-top: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      font-size: 12px;
+      font-weight: 900;
     }
 
     .status.PENDING {
-      color:
-        var(--accent2);
+      color: var(--accent2);
     }
 
     .status.APPROVED {
-      color:
-        var(--success);
+      color: var(--success);
     }
 
     .status.REJECTED,
     .status.HIDDEN {
-      color:
-        var(--danger);
+      color: var(--danger);
     }
 
     .stats-grid {
-      display:
-        grid;
-
-      grid-template-columns:
-        1fr
-        1fr;
-
-      gap:
-        9px;
-
-      margin-top:
-        15px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      margin-top: 15px;
     }
 
     .stat {
-      padding:
-        14px;
-
-      border-radius:
-        16px;
-
-      background:
-        rgba(
-          255,
-          255,
-          255,
-          .045
-        );
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.045);
     }
 
     .stat-value {
-      font-size:
-        20px;
-
-      font-weight:
-        950;
+      font-size: 20px;
+      font-weight: 950;
     }
 
     .stat-label {
-      margin-top:
-        4px;
-
-      color:
-        var(--muted);
-
-      font-size:
-        11px;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
     }
 
     .form {
@@ -638,91 +417,37 @@
     }
 
     .field {
-      margin-bottom:
-        15px;
+      margin-bottom: 15px;
     }
 
     .field label {
-      display:
-        block;
-
-      margin:
-        0
-        2px
-        7px;
-
-      color:
-        var(--muted);
-
-      font-size:
-        12px;
-
-      font-weight:
-        800;
+      display: block;
+      margin: 0 2px 7px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
     }
 
     .input {
       width: 100%;
-
-      padding:
-        14px;
-
-      border:
-        1px solid
-        var(--line);
-
-      border-radius:
-        14px;
-
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
       outline: 0;
-
-      background:
-        rgba(
-          255,
-          255,
-          255,
-          .045
-        );
-
-      color:
-        white;
+      background: rgba(255,255,255,.045);
+      color: white;
     }
 
     .upload-box {
-      position: relative;
-
       width: 100%;
-
-      min-height:
-        220px;
-
+      min-height: 220px;
       display: grid;
       place-items: center;
-
       overflow: hidden;
-
-      border:
-        1px dashed
-        rgba(
-          255,
-          255,
-          255,
-          .20
-        );
-
-      border-radius:
-        18px;
-
-      background:
-        rgba(
-          255,
-          255,
-          255,
-          .035
-        );
-
+      border: 1px dashed rgba(255,255,255,.20);
+      border-radius: 18px;
+      background: rgba(255,255,255,.035);
       color: white;
-
       text-align: center;
     }
 
@@ -736,101 +461,59 @@
 
     .upload-title {
       margin-top: 9px;
-
-      font-weight:
-        950;
-
-      font-size:
-        18px;
+      font-weight: 950;
+      font-size: 18px;
     }
 
     .upload-sub {
-      margin-top:
-        5px;
-
-      color:
-        var(--muted);
-
-      font-size:
-        12px;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
     }
 
     .photo-preview {
       width: 100%;
       max-height: 410px;
-
       display: block;
-
-      object-fit:
-        contain;
+      object-fit: contain;
     }
 
     .file-input {
-      display:
-        none;
+      display: none;
     }
 
     .upload-progress {
       margin-top: 10px;
-
-      color:
-        var(--muted);
-
-      font-size:
-        12px;
-
-      text-align:
-        center;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
     }
 
     .invite-hero {
-      padding:
-        22px
-        18px;
-
-      text-align:
-        center;
+      padding: 22px 18px;
+      text-align: center;
     }
 
     .invite-cat {
-      font-size:
-        65px;
+      font-size: 65px;
     }
 
     .invite-title {
-      font-size:
-        24px;
-
-      font-weight:
-        950;
+      font-size: 24px;
+      font-weight: 950;
     }
 
     .invite-progress {
-      height:
-        12px;
-
-      margin-top:
-        18px;
-
-      overflow:
-        hidden;
-
-      border-radius:
-        999px;
-
-      background:
-        rgba(
-          255,
-          255,
-          255,
-          .08
-        );
+      height: 12px;
+      margin-top: 18px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
     }
 
     .invite-progress-bar {
       height: 100%;
       width: 0;
-
       background:
         linear-gradient(
           90deg,
@@ -839,302 +522,179 @@
         );
     }
 
-    .admin-cat {
-      margin-bottom:
-        14px;
+    .admin-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      gap: 10px;
+    }
 
-      overflow:
-        hidden;
+    .admin-count {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .admin-refresh {
+      width: auto;
+      margin: 0;
+      padding: 10px 13px;
+    }
+
+    .admin-cat {
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .admin-photo-wrap {
+      position: relative;
+      background: #090a0d;
     }
 
     .admin-cat img {
       width: 100%;
-      max-height:
-        430px;
-
+      max-height: 520px;
       display: block;
-
-      object-fit:
-        cover;
+      object-fit: contain;
+      background: #090a0d;
     }
 
     .admin-body {
-      padding:
-        14px;
+      padding: 16px;
     }
 
     .admin-name {
-      font-size:
-        21px;
-
-      font-weight:
-        950;
+      font-size: 24px;
+      font-weight: 950;
     }
 
     .admin-meta {
-      margin-top:
-        5px;
-
-      color:
-        var(--muted);
-
-      font-size:
-        12px;
-
-      line-height:
-        1.5;
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
     }
 
     .admin-actions {
-      display:
-        grid;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 14px;
+    }
 
-      grid-template-columns:
-        1fr
-        1fr;
+    .admin-actions .btn {
+      margin: 0;
+    }
 
-      gap:
-        8px;
-
-      margin-top:
-        13px;
+    .admin-ban {
+      margin-top: 8px;
     }
 
     .nav {
       position: fixed;
-
       z-index: 50;
-
       left: 50%;
       bottom: 0;
-
-      transform:
-        translateX(-50%);
-
+      transform: translateX(-50%);
       width: 100%;
       max-width: 520px;
-
-      min-height:
-        76px;
-
+      min-height: 76px;
       display: grid;
-
-      grid-template-columns:
-        repeat(
-          4,
-          1fr
-        );
-
+      grid-template-columns: repeat(4, 1fr);
       padding:
         7px
         8px
-        calc(
-          7px +
-          env(
-            safe-area-inset-bottom
-          )
-        );
-
-      border-top:
-        1px solid
-        var(--line);
-
-      background:
-        rgba(
-          15,
-          16,
-          21,
-          .95
-        );
-
-      backdrop-filter:
-        blur(22px);
+        calc(7px + env(safe-area-inset-bottom));
+      border-top: 1px solid var(--line);
+      background: rgba(15,16,21,.95);
+      backdrop-filter: blur(22px);
     }
 
     .nav.admin-visible {
-      grid-template-columns:
-        repeat(
-          5,
-          1fr
-        );
+      grid-template-columns: repeat(5, 1fr);
     }
 
     .nav-btn {
       border: 0;
-
-      border-radius:
-        14px;
-
-      background:
-        transparent;
-
-      color:
-        var(--muted);
-
-      display:
-        flex;
-
-      flex-direction:
-        column;
-
-      align-items:
-        center;
-
-      justify-content:
-        center;
-
+      border-radius: 14px;
+      background: transparent;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       gap: 3px;
-
-      font-size:
-        10px;
-
-      font-weight:
-        850;
+      font-size: 10px;
+      font-weight: 850;
     }
 
     .nav-btn .icon {
-      font-size:
-        23px;
+      font-size: 23px;
     }
 
     .nav-btn.active {
       color: white;
-
-      background:
-        rgba(
-          255,
-          255,
-          255,
-          .055
-        );
+      background: rgba(255,255,255,.055);
     }
 
     .hidden {
-      display:
-        none !important;
+      display: none !important;
     }
 
     .loading,
     .empty {
-      padding:
-        45px
-        20px;
-
-      color:
-        var(--muted);
-
-      text-align:
-        center;
+      padding: 45px 20px;
+      color: var(--muted);
+      text-align: center;
     }
 
     .empty-emoji {
-      display:
-        block;
-
-      margin-bottom:
-        12px;
-
-      font-size:
-        55px;
+      display: block;
+      margin-bottom: 12px;
+      font-size: 55px;
     }
 
     .toast {
-      position:
-        fixed;
-
-      z-index:
-        200;
-
-      top:
-        calc(
-          16px +
-          env(
-            safe-area-inset-top
-          )
-        );
-
-      left:
-        50%;
-
-      transform:
-        translate(
-          -50%,
-          -130px
-        );
-
-      width:
-        calc(
-          100% -
-          30px
-        );
-
-      max-width:
-        480px;
-
-      padding:
-        14px
-        16px;
-
-      border-radius:
-        16px;
-
-      background:
-        #292c35;
-
-      color:
-        white;
-
-      font-weight:
-        850;
-
-      transition:
-        transform
-        .25s ease;
+      position: fixed;
+      z-index: 200;
+      top: calc(16px + env(safe-area-inset-top));
+      left: 50%;
+      transform: translate(-50%, -130px);
+      width: calc(100% - 30px);
+      max-width: 480px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: #292c35;
+      color: white;
+      font-weight: 850;
+      transition: transform .25s ease;
     }
 
     .toast.show {
-      transform:
-        translate(
-          -50%,
-          0
-        );
+      transform: translate(-50%, 0);
     }
   </style>
 </head>
 
 <body>
 
-  <div
-    id="toast"
-    class="toast"
-  ></div>
+  <div id="toast" class="toast"></div>
 
   <div class="app">
 
     <header class="header">
 
       <div class="brand">
-
-        <div class="brand-icon">
-          🐈
-        </div>
+        <div class="brand-icon">🐈</div>
 
         <div>
-          <div class="brand-name">
-            КОТОБОР
-          </div>
-
-          <div class="brand-sub">
-            кот против кота
-          </div>
+          <div class="brand-name">КОТОБОР</div>
+          <div class="brand-sub">кот против кота</div>
         </div>
-
       </div>
 
-      <div
-        id="votesPill"
-        class="votes-pill"
-      >
+      <div id="votesPill" class="votes-pill">
         …
       </div>
 
@@ -1142,97 +702,43 @@
 
     <main class="content">
 
-      <!-- BATTLE -->
-
-      <section
-        id="page-battle"
-        class="page active"
-      >
+      <section id="page-battle" class="page active">
 
         <div class="battle-title">
-          <strong>
-            Кто круче?
-          </strong>
-
-          <span>
-            Тапни по коту. Думать долго запрещено.
-          </span>
+          <strong>Кто круче?</strong>
+          <span>Тапни по коту. Думать долго запрещено.</span>
         </div>
 
-        <div
-          id="battleLoading"
-          class="loading"
-        >
+        <div id="battleLoading" class="loading">
           Ищем достойных соперников…
         </div>
 
-        <div
-          id="battleBox"
-          class="battle hidden"
-        >
+        <div id="battleBox" class="battle hidden">
 
-          <button
-            id="catA"
-            class="cat-card"
-            type="button"
-          >
-            <img
-              id="catAImage"
-              alt=""
-            />
-
-            <div
-              class="cat-gradient"
-            ></div>
-
-            <div
-              id="catAName"
-              class="cat-name"
-            ></div>
+          <button id="catA" class="cat-card" type="button">
+            <img id="catAImage" alt="" />
+            <div class="cat-gradient"></div>
+            <div id="catAName" class="cat-name"></div>
           </button>
 
-          <div class="vs">
-            VS
-          </div>
+          <div class="vs">VS</div>
 
-          <button
-            id="catB"
-            class="cat-card"
-            type="button"
-          >
-            <img
-              id="catBImage"
-              alt=""
-            />
-
-            <div
-              class="cat-gradient"
-            ></div>
-
-            <div
-              id="catBName"
-              class="cat-name"
-            ></div>
+          <button id="catB" class="cat-card" type="button">
+            <img id="catBImage" alt="" />
+            <div class="cat-gradient"></div>
+            <div id="catBName" class="cat-name"></div>
           </button>
 
         </div>
 
-        <div
-          id="battleHelp"
-          class="battle-help hidden"
-        >
+        <div id="battleHelp" class="battle-help hidden">
           Нажми на кота, который нравится больше.
         </div>
 
-        <div
-          id="limitBox"
-          class="card timer-box hidden"
-        >
+        <div id="limitBox" class="card timer-box hidden">
           Новые голоса появятся через
 
-          <strong
-            id="limitTimer"
-          >
+          <strong id="limitTimer">
             00:00:00
           </strong>
 
@@ -1246,12 +752,7 @@
 
       </section>
 
-      <!-- RANKING -->
-
-      <section
-        id="page-ranking"
-        class="page"
-      >
+      <section id="page-ranking" class="page">
 
         <div class="section-title">
           Лучшие коты
@@ -1261,10 +762,7 @@
           Рейтинг формируется реальными сравнениями.
         </div>
 
-        <div
-          id="rankingList"
-          class="card ranking-list"
-        >
+        <div id="rankingList" class="card ranking-list">
           <div class="loading">
             Загружаем рейтинг…
           </div>
@@ -1272,37 +770,21 @@
 
       </section>
 
-      <!-- MY CAT -->
-
-      <section
-        id="page-mycat"
-        class="page"
-      >
+      <section id="page-mycat" class="page">
 
         <div class="section-title">
           Мой кот
         </div>
 
-        <div
-          id="myCatContainer"
-        ></div>
+        <div id="myCatContainer"></div>
 
       </section>
 
-      <!-- INVITE -->
+      <section id="page-invite" class="page">
 
-      <section
-        id="page-invite"
-        class="page"
-      >
+        <div class="card invite-hero">
 
-        <div
-          class="card invite-hero"
-        >
-
-          <div class="invite-cat">
-            🐈‍⬛
-          </div>
+          <div class="invite-cat">🐈‍⬛</div>
 
           <div class="invite-title">
             Зови людей в КОТОБОР
@@ -1316,9 +798,7 @@
             7 дней голосований без ограничений.
           </div>
 
-          <div
-            class="invite-progress"
-          >
+          <div class="invite-progress">
             <div
               id="inviteProgressBar"
               class="invite-progress-bar"
@@ -1327,10 +807,7 @@
 
           <div
             id="inviteProgressText"
-            style="
-              margin-top:10px;
-              font-weight:900;
-            "
+            style="margin-top:10px;font-weight:900;"
           >
             0 из 10 друзей
           </div>
@@ -1358,25 +835,31 @@
 
       </section>
 
-      <!-- ADMIN -->
-
-      <section
-        id="page-admin"
-        class="page"
-      >
+      <section id="page-admin" class="page">
 
         <div class="section-title">
           Модерация
         </div>
 
         <div class="section-subtitle">
-          Ни одна загруженная фотография
-          не допускается к битвам без проверки.
+          Здесь появляются все новые фотографии до выхода в битвы.
         </div>
 
-        <div
-          id="adminQueue"
-        >
+        <div class="admin-toolbar">
+          <div id="adminCount" class="admin-count">
+            Загрузка…
+          </div>
+
+          <button
+            id="adminRefresh"
+            class="btn admin-refresh"
+            type="button"
+          >
+            ↻ Обновить
+          </button>
+        </div>
+
+        <div id="adminQueue">
           <div class="loading">
             Загружаем очередь…
           </div>
@@ -1388,52 +871,25 @@
 
   </div>
 
-  <nav
-    id="nav"
-    class="nav"
-  >
+  <nav id="nav" class="nav">
 
-    <button
-      class="nav-btn active"
-      data-page="battle"
-    >
-      <span class="icon">
-        ⚔️
-      </span>
-
+    <button class="nav-btn active" data-page="battle">
+      <span class="icon">⚔️</span>
       Битва
     </button>
 
-    <button
-      class="nav-btn"
-      data-page="ranking"
-    >
-      <span class="icon">
-        🏆
-      </span>
-
+    <button class="nav-btn" data-page="ranking">
+      <span class="icon">🏆</span>
       Рейтинг
     </button>
 
-    <button
-      class="nav-btn"
-      data-page="mycat"
-    >
-      <span class="icon">
-        🐱
-      </span>
-
+    <button class="nav-btn" data-page="mycat">
+      <span class="icon">🐱</span>
       Мой кот
     </button>
 
-    <button
-      class="nav-btn"
-      data-page="invite"
-    >
-      <span class="icon">
-        📨
-      </span>
-
+    <button class="nav-btn" data-page="invite">
+      <span class="icon">📨</span>
       Пригласить
     </button>
 
@@ -1442,10 +898,7 @@
       class="nav-btn hidden"
       data-page="admin"
     >
-      <span class="icon">
-        🛡️
-      </span>
-
+      <span class="icon">🛡️</span>
       Админ
     </button>
 
@@ -1461,13 +914,8 @@
       tg.expand();
 
       try {
-        tg.setHeaderColor(
-          "#0b0c10"
-        );
-
-        tg.setBackgroundColor(
-          "#0b0c10"
-        );
+        tg.setHeaderColor("#0b0c10");
+        tg.setBackgroundColor("#0b0c10");
       } catch {}
     }
 
@@ -1476,47 +924,27 @@
 
     const state = {
       me: null,
-
       battle: null,
-
       timer: null,
-
-      currentPage:
-        "battle",
-
-      selectedImageData:
-        null,
+      currentPage: "battle",
+      selectedImageData: null,
     };
 
-    /* =========================
-       API
-       ========================= */
-
-    async function api(
-      url,
-      options = {}
-    ) {
+    async function api(url, options = {}) {
       const headers = {
         ...(options.headers || {})
       };
 
       if (
         options.body &&
-        typeof options.body ===
-          "string"
+        typeof options.body === "string"
       ) {
-        headers[
-          "Content-Type"
-        ] =
+        headers["Content-Type"] =
           "application/json";
       }
 
-      if (
-        tg?.initData
-      ) {
-        headers[
-          "x-telegram-init-data"
-        ] =
+      if (tg?.initData) {
+        headers["x-telegram-init-data"] =
           tg.initData;
       }
 
@@ -1536,18 +964,13 @@
           await response.json();
       } catch {}
 
-      if (
-        !response.ok
-      ) {
+      if (!response.ok) {
         if (
           data.error ===
           "PERMANENT_BAN"
         ) {
           renderBan();
-
-          throw new Error(
-            "PERMANENT_BAN"
-          );
+          throw new Error("PERMANENT_BAN");
         }
 
         const error =
@@ -1565,30 +988,18 @@
       return data;
     }
 
-    /* =========================
-       TOAST
-       ========================= */
-
-    function toast(
-      message
-    ) {
+    function toast(message) {
       const el =
-        document.getElementById(
-          "toast"
-        );
+        document.getElementById("toast");
 
       el.textContent =
         message;
 
-      el.classList.add(
-        "show"
-      );
+      el.classList.add("show");
 
       setTimeout(
         () => {
-          el.classList.remove(
-            "show"
-          );
+          el.classList.remove("show");
         },
         2400
       );
@@ -1608,11 +1019,8 @@
             font-family:-apple-system,BlinkMacSystemFont,sans-serif;
           "
         >
-
           <div>
-            <div
-              style="font-size:70px"
-            >
+            <div style="font-size:70px">
               ⛔
             </div>
 
@@ -1626,24 +1034,15 @@
                 line-height:1.5;
               "
             >
-              Этот аккаунт больше
-              не может пользоваться
-              КОТОБОРОМ.
+              Этот аккаунт больше не может пользоваться КОТОБОРОМ.
             </p>
           </div>
-
         </div>
       `;
     }
 
-    /* =========================
-       NAVIGATION
-       ========================= */
-
     document
-      .querySelectorAll(
-        ".nav-btn"
-      )
+      .querySelectorAll(".nav-btn")
       .forEach(
         (button) => {
           button.addEventListener(
@@ -1657,67 +1056,41 @@
               }
 
               document
-                .querySelectorAll(
-                  ".nav-btn"
-                )
+                .querySelectorAll(".nav-btn")
                 .forEach(
                   (item) =>
-                    item.classList.remove(
-                      "active"
-                    )
+                    item.classList.remove("active")
                 );
 
-              button.classList.add(
-                "active"
-              );
+              button.classList.add("active");
 
               document
-                .querySelectorAll(
-                  ".page"
-                )
+                .querySelectorAll(".page")
                 .forEach(
                   (item) =>
-                    item.classList.remove(
-                      "active"
-                    )
+                    item.classList.remove("active")
                 );
 
               document
-                .getElementById(
-                  `page-${page}`
-                )
-                .classList.add(
-                  "active"
-                );
+                .getElementById(`page-${page}`)
+                .classList.add("active");
 
               state.currentPage =
                 page;
 
-              if (
-                page ===
-                "ranking"
-              ) {
+              if (page === "ranking") {
                 await loadRanking();
               }
 
-              if (
-                page ===
-                "mycat"
-              ) {
+              if (page === "mycat") {
                 await loadMyCat();
               }
 
-              if (
-                page ===
-                "invite"
-              ) {
+              if (page === "invite") {
                 renderInvite();
               }
 
-              if (
-                page ===
-                "admin"
-              ) {
+              if (page === "admin") {
                 await loadAdminQueue();
               }
             }
@@ -1725,15 +1098,16 @@
         }
       );
 
-    /* =========================
-       ME
-       ========================= */
+    document
+      .getElementById("adminRefresh")
+      .addEventListener(
+        "click",
+        loadAdminQueue
+      );
 
     async function loadMe() {
       state.me =
-        await api(
-          "/api/me"
-        );
+        await api("/api/me");
 
       updateVotePill();
 
@@ -1741,42 +1115,32 @@
         state.me.user.role;
 
       if (
-        role ===
-          "MODERATOR" ||
-        role ===
-          "OWNER"
+        role === "MODERATOR" ||
+        role === "OWNER"
       ) {
         document
-          .getElementById(
-            "nav"
-          )
-          .classList.add(
-            "admin-visible"
-          );
+          .getElementById("nav")
+          .classList.add("admin-visible");
 
         document
-          .getElementById(
-            "adminNav"
-          )
-          .classList.remove(
-            "hidden"
-          );
+          .getElementById("adminNav")
+          .classList.remove("hidden");
+      } else {
+        document
+          .getElementById("adminNav")
+          .classList.add("hidden");
       }
 
       renderInvite();
     }
 
-    function updateVotePill(
-      votes = null
-    ) {
+    function updateVotePill(votes = null) {
       const value =
         votes ||
         state.me?.votes;
 
       const el =
-        document.getElementById(
-          "votesPill"
-        );
+        document.getElementById("votesPill");
 
       if (!value) {
         el.textContent =
@@ -1785,9 +1149,7 @@
         return;
       }
 
-      if (
-        value.unlimited
-      ) {
+      if (value.unlimited) {
         el.textContent =
           "∞ голосов";
 
@@ -1798,129 +1160,59 @@
         `⚡ ${value.remaining}`;
     }
 
-    /* =========================
-       BATTLE
-       ========================= */
-
     async function loadBattle() {
-      clearInterval(
-        state.timer
-      );
+      clearInterval(state.timer);
 
       const loading =
-        document.getElementById(
-          "battleLoading"
-        );
+        document.getElementById("battleLoading");
 
       const box =
-        document.getElementById(
-          "battleBox"
-        );
+        document.getElementById("battleBox");
 
       const help =
-        document.getElementById(
-          "battleHelp"
-        );
+        document.getElementById("battleHelp");
 
       const limit =
-        document.getElementById(
-          "limitBox"
-        );
+        document.getElementById("limitBox");
 
-      loading.classList.remove(
-        "hidden"
-      );
-
-      box.classList.add(
-        "hidden"
-      );
-
-      help.classList.add(
-        "hidden"
-      );
-
-      limit.classList.add(
-        "hidden"
-      );
+      loading.classList.remove("hidden");
+      box.classList.add("hidden");
+      help.classList.add("hidden");
+      limit.classList.add("hidden");
 
       try {
         const data =
-          await api(
-            "/api/battle"
-          );
+          await api("/api/battle");
 
         state.battle =
           data;
 
-        document
-          .getElementById(
-            "catAImage"
-          )
-          .src =
-            data
-              .cats[0]
-              .imageUrl;
+        document.getElementById("catAImage").src =
+          data.cats[0].imageUrl;
 
-        document
-          .getElementById(
-            "catAName"
-          )
-          .textContent =
-            data
-              .cats[0]
-              .name;
+        document.getElementById("catAName").textContent =
+          data.cats[0].name;
 
-        document
-          .getElementById(
-            "catBImage"
-          )
-          .src =
-            data
-              .cats[1]
-              .imageUrl;
+        document.getElementById("catBImage").src =
+          data.cats[1].imageUrl;
 
-        document
-          .getElementById(
-            "catBName"
-          )
-          .textContent =
-            data
-              .cats[1]
-              .name;
+        document.getElementById("catBName").textContent =
+          data.cats[1].name;
 
-        updateVotePill(
-          data.votes
-        );
+        updateVotePill(data.votes);
 
-        loading.classList.add(
-          "hidden"
-        );
-
-        box.classList.remove(
-          "hidden"
-        );
-
-        help.classList.remove(
-          "hidden"
-        );
+        loading.classList.add("hidden");
+        box.classList.remove("hidden");
+        help.classList.remove("hidden");
       } catch (error) {
-        loading.classList.add(
-          "hidden"
-        );
+        loading.classList.add("hidden");
 
         if (
           error.data?.error ===
           "VOTE_LIMIT"
         ) {
-          updateVotePill(
-            error.data.votes
-          );
-
-          showLimit(
-            error.data
-              .votes
-              .resetsAt
-          );
+          updateVotePill(error.data.votes);
+          showLimit(error.data.votes.resetsAt);
 
           return;
         }
@@ -1930,44 +1222,31 @@
           "NO_BATTLE_AVAILABLE"
         ) {
           loading.innerHTML = `
-            <span
-              style="font-size:52px"
-            >
+            <span style="font-size:52px">
               😼
             </span>
 
             <br><br>
 
-            Пока недостаточно
-            котов для новой пары.
+            Пока недостаточно котов для новой пары.
           `;
 
-          loading.classList.remove(
-            "hidden"
-          );
+          loading.classList.remove("hidden");
 
           return;
         }
 
-        console.error(
-          error
-        );
+        console.error(error);
 
         loading.textContent =
           "Не удалось загрузить битву.";
 
-        loading.classList.remove(
-          "hidden"
-        );
+        loading.classList.remove("hidden");
       }
     }
 
-    async function vote(
-      winnerId
-    ) {
-      if (
-        !state.battle
-      ) {
+    async function vote(winnerId) {
+      if (!state.battle) {
         return;
       }
 
@@ -1975,155 +1254,100 @@
         state.battle.cats;
 
       const buttonA =
-        document.getElementById(
-          "catA"
-        );
+        document.getElementById("catA");
 
       const buttonB =
-        document.getElementById(
-          "catB"
-        );
+        document.getElementById("catB");
 
-      buttonA.disabled =
-        true;
-
-      buttonB.disabled =
-        true;
+      buttonA.disabled = true;
+      buttonB.disabled = true;
 
       try {
         const data =
           await api(
             "/api/vote",
             {
-              method:
-                "POST",
+              method: "POST",
 
               body:
                 JSON.stringify({
-                  catAId:
-                    a.id,
-
-                  catBId:
-                    b.id,
-
+                  catAId: a.id,
+                  catBId: b.id,
                   winnerId,
                 }),
             }
           );
 
-        updateVotePill(
-          data.votes
-        );
+        updateVotePill(data.votes);
 
         try {
           tg
             ?.HapticFeedback
-            ?.impactOccurred(
-              "light"
-            );
+            ?.impactOccurred("light");
         } catch {}
 
         await loadBattle();
       } catch (error) {
-        console.error(
-          error
-        );
+        console.error(error);
 
         if (
           error.data?.error ===
           "VOTE_LIMIT"
         ) {
           showLimit(
-            error.data
-              .votes
-              .resetsAt
+            error.data.votes.resetsAt
           );
         } else {
-          toast(
-            "Голос не сохранился"
-          );
+          toast("Голос не сохранился");
         }
       } finally {
-        buttonA.disabled =
-          false;
-
-        buttonB.disabled =
-          false;
+        buttonA.disabled = false;
+        buttonB.disabled = false;
       }
     }
 
     document
-      .getElementById(
-        "catA"
-      )
+      .getElementById("catA")
       .addEventListener(
         "click",
         () => {
-          if (
-            state.battle
-          ) {
+          if (state.battle) {
             vote(
-              state
-                .battle
-                .cats[0]
-                .id
+              state.battle.cats[0].id
             );
           }
         }
       );
 
     document
-      .getElementById(
-        "catB"
-      )
+      .getElementById("catB")
       .addEventListener(
         "click",
         () => {
-          if (
-            state.battle
-          ) {
+          if (state.battle) {
             vote(
-              state
-                .battle
-                .cats[1]
-                .id
+              state.battle.cats[1].id
             );
           }
         }
       );
 
-    function showLimit(
-      resetsAt
-    ) {
+    function showLimit(resetsAt) {
       document
-        .getElementById(
-          "battleBox"
-        )
-        .classList.add(
-          "hidden"
-        );
+        .getElementById("battleBox")
+        .classList.add("hidden");
 
       document
-        .getElementById(
-          "battleHelp"
-        )
-        .classList.add(
-          "hidden"
-        );
+        .getElementById("battleHelp")
+        .classList.add("hidden");
 
       document
-        .getElementById(
-          "limitBox"
-        )
-        .classList.remove(
-          "hidden"
-        );
+        .getElementById("limitBox")
+        .classList.remove("hidden");
 
       if (!resetsAt) {
         document
-          .getElementById(
-            "limitTimer"
-          )
+          .getElementById("limitTimer")
           .textContent =
             "до восстановления";
 
@@ -2132,68 +1356,39 @@
 
       function tick() {
         const diff =
-          new Date(
-            resetsAt
-          ).getTime() -
+          new Date(resetsAt).getTime() -
           Date.now();
 
-        if (
-          diff <= 0
-        ) {
-          clearInterval(
-            state.timer
-          );
+        if (diff <= 0) {
+          clearInterval(state.timer);
 
           loadMe()
-            .then(
-              loadBattle
-            );
+            .then(loadBattle);
 
           return;
         }
 
         const total =
-          Math.floor(
-            diff / 1000
-          );
+          Math.floor(diff / 1000);
 
         const h =
           String(
-            Math.floor(
-              total / 3600
-            )
-          ).padStart(
-            2,
-            "0"
-          );
+            Math.floor(total / 3600)
+          ).padStart(2, "0");
 
         const m =
           String(
             Math.floor(
-              (
-                total %
-                3600
-              ) /
-                60
+              (total % 3600) / 60
             )
-          ).padStart(
-            2,
-            "0"
-          );
+          ).padStart(2, "0");
 
         const s =
-          String(
-            total %
-              60
-          ).padStart(
-            2,
-            "0"
-          );
+          String(total % 60)
+            .padStart(2, "0");
 
         document
-          .getElementById(
-            "limitTimer"
-          )
+          .getElementById("limitTimer")
           .textContent =
             `${h}:${m}:${s}`;
       }
@@ -2206,10 +1401,6 @@
           1000
         );
     }
-
-    /* =========================
-       SHARE
-       ========================= */
 
     async function shareKotobor() {
       const telegramId =
@@ -2235,26 +1426,17 @@
           const shareUrl =
             "https://t.me/share/url" +
             "?url=" +
-            encodeURIComponent(
-              url
-            ) +
+            encodeURIComponent(url) +
             "&text=" +
-            encodeURIComponent(
-              text
-            );
+            encodeURIComponent(text);
 
           tg.openTelegramLink(
             shareUrl
           );
-        } else if (
-          navigator.share
-        ) {
+        } else if (navigator.share) {
           await navigator.share({
-            title:
-              "КОТОБОР",
-
+            title: "КОТОБОР",
             text,
-
             url,
           });
         } else {
@@ -2269,8 +1451,7 @@
           await api(
             "/api/share-reward",
             {
-              method:
-                "POST",
+              method: "POST",
             }
           );
 
@@ -2281,9 +1462,7 @@
           reward.votes
         );
 
-        toast(
-          "+5 голосов 🐾"
-        );
+        toast("+5 голосов 🐾");
       } catch (error) {
         if (
           error.data?.error ===
@@ -2296,89 +1475,57 @@
           return;
         }
 
-        console.error(
-          error
-        );
+        console.error(error);
       }
     }
 
     document
-      .getElementById(
-        "shareButton"
-      )
+      .getElementById("shareButton")
       .addEventListener(
         "click",
         shareKotobor
       );
 
     document
-      .getElementById(
-        "shareFromLimit"
-      )
+      .getElementById("shareFromLimit")
       .addEventListener(
         "click",
         shareKotobor
       );
 
-    /* =========================
-       INVITE
-       ========================= */
-
     function renderInvite() {
-      if (
-        !state.me
-      ) {
+      if (!state.me) {
         return;
       }
 
       const count =
-        state
-          .me
-          .referrals
-          ?.confirmed ||
+        state.me.referrals?.confirmed ||
         0;
 
       const target =
-        state
-          .me
-          .referrals
-          ?.target ||
+        state.me.referrals?.target ||
         10;
 
       const percent =
         Math.min(
           100,
-
-          count /
-            target *
-            100
+          count / target * 100
         );
 
       document
-        .getElementById(
-          "inviteProgressBar"
-        )
-        .style
-        .width =
+        .getElementById("inviteProgressBar")
+        .style.width =
           `${percent}%`;
 
       document
-        .getElementById(
-          "inviteProgressText"
-        )
+        .getElementById("inviteProgressText")
         .textContent =
           `${count} из ${target} друзей`;
     }
 
-    /* =========================
-       RANKING
-       ========================= */
-
     async function loadRanking() {
       const el =
-        document.getElementById(
-          "rankingList"
-        );
+        document.getElementById("rankingList");
 
       el.innerHTML = `
         <div class="loading">
@@ -2388,24 +1535,17 @@
 
       try {
         const data =
-          await api(
-            "/api/ranking"
-          );
+          await api("/api/ranking");
 
-        if (
-          !data.ranking.length
-        ) {
+        if (!data.ranking.length) {
           el.innerHTML = `
             <div class="empty">
 
-              <span
-                class="empty-emoji"
-              >
+              <span class="empty-emoji">
                 🏆
               </span>
 
-              Пока никто не прошёл
-              калибровку.
+              Пока никто не прошёл калибровку.
 
             </div>
           `;
@@ -2418,75 +1558,50 @@
             .map(
               (cat) => {
                 const position =
-                  Number(
-                    cat.position
-                  );
+                  Number(cat.position);
 
                 let medal =
                   `#${position}`;
 
-                if (
-                  position === 1
-                ) {
-                  medal =
-                    "🥇";
+                if (position === 1) {
+                  medal = "🥇";
                 }
 
-                if (
-                  position === 2
-                ) {
-                  medal =
-                    "🥈";
+                if (position === 2) {
+                  medal = "🥈";
                 }
 
-                if (
-                  position === 3
-                ) {
-                  medal =
-                    "🥉";
+                if (position === 3) {
+                  medal = "🥉";
                 }
 
                 return `
-                  <div
-                    class="rank-row"
-                  >
+                  <div class="rank-row">
 
-                    <div
-                      class="rank-position"
-                    >
+                    <div class="rank-position">
                       ${medal}
                     </div>
 
                     <img
                       class="rank-photo"
-                      src="${escapeAttr(
-                        cat.image_url
-                      )}"
+                      src="${escapeAttr(cat.image_url)}"
                       alt=""
                     />
 
                     <div>
 
-                      <div
-                        class="rank-name"
-                      >
-                        ${escapeHtml(
-                          cat.name
-                        )}
+                      <div class="rank-name">
+                        ${escapeHtml(cat.name)}
                       </div>
 
-                      <div
-                        class="rank-meta"
-                      >
+                      <div class="rank-meta">
                         ${cat.battles}
                         сравнений
                       </div>
 
                     </div>
 
-                    <div
-                      class="rank-rate"
-                    >
+                    <div class="rank-rate">
                       ${cat.winRate}%
                     </div>
 
@@ -2496,66 +1611,43 @@
             )
             .join("");
       } catch (error) {
-        console.error(
-          error
-        );
+        console.error(error);
 
         el.innerHTML = `
           <div class="empty">
-            Не удалось
-            загрузить рейтинг.
+            Не удалось загрузить рейтинг.
           </div>
         `;
       }
     }
 
-    /* =========================
-       IMAGE COMPRESSION
-       ========================= */
-
-    function readFileAsDataURL(
-      file
-    ) {
+    function readFileAsDataURL(file) {
       return new Promise(
-        (
-          resolve,
-          reject
-        ) => {
+        (resolve, reject) => {
           const reader =
             new FileReader();
 
           reader.onload =
             () =>
-              resolve(
-                reader.result
-              );
+              resolve(reader.result);
 
           reader.onerror =
             reject;
 
-          reader.readAsDataURL(
-            file
-          );
+          reader.readAsDataURL(file);
         }
       );
     }
 
-    function loadImage(
-      src
-    ) {
+    function loadImage(src) {
       return new Promise(
-        (
-          resolve,
-          reject
-        ) => {
+        (resolve, reject) => {
           const image =
             new Image();
 
           image.onload =
             () =>
-              resolve(
-                image
-              );
+              resolve(image);
 
           image.onerror =
             reject;
@@ -2566,18 +1658,12 @@
       );
     }
 
-    async function prepareImage(
-      file
-    ) {
+    async function prepareImage(file) {
       const originalData =
-        await readFileAsDataURL(
-          file
-        );
+        await readFileAsDataURL(file);
 
       const image =
-        await loadImage(
-          originalData
-        );
+        await loadImage(originalData);
 
       const maxSide =
         1600;
@@ -2591,37 +1677,24 @@
         image.height;
 
       if (
-        width >
-          maxSide ||
-        height >
-          maxSide
+        width > maxSide ||
+        height > maxSide
       ) {
         const ratio =
           Math.min(
-            maxSide /
-              width,
-
-            maxSide /
-              height
+            maxSide / width,
+            maxSide / height
           );
 
         width =
-          Math.round(
-            width *
-              ratio
-          );
+          Math.round(width * ratio);
 
         height =
-          Math.round(
-            height *
-              ratio
-          );
+          Math.round(height * ratio);
       }
 
       const canvas =
-        document.createElement(
-          "canvas"
-        );
+        document.createElement("canvas");
 
       canvas.width =
         width;
@@ -2630,9 +1703,7 @@
         height;
 
       const ctx =
-        canvas.getContext(
-          "2d"
-        );
+        canvas.getContext("2d");
 
       ctx.drawImage(
         image,
@@ -2642,25 +1713,15 @@
         height
       );
 
-      /*
-        Переводим HEIC/PNG/etc
-        в обычный JPEG перед отправкой.
-      */
       return canvas.toDataURL(
         "image/jpeg",
         .84
       );
     }
 
-    /* =========================
-       MY CAT
-       ========================= */
-
     async function loadMyCat() {
       const container =
-        document.getElementById(
-          "myCatContainer"
-        );
+        document.getElementById("myCatContainer");
 
       container.innerHTML = `
         <div class="loading">
@@ -2683,25 +1744,16 @@
         }
 
         const battles =
-          Number(
-            cat.battles ||
-            0
-          );
+          Number(cat.battles || 0);
 
         const wins =
-          Number(
-            cat.wins ||
-            0
-          );
+          Number(cat.wins || 0);
 
         const winRate =
           battles
             ? Math.round(
-                wins /
-                  battles *
-                  1000
-              ) /
-              10
+                wins / battles * 1000
+              ) / 10
             : 0;
 
         let extra = "";
@@ -2730,10 +1782,8 @@
                   line-height:1.45;
                 "
               >
-                Пока модератор
-                не одобрит фотографию,
-                этот кот не появляется
-                в битвах.
+                Пока модератор не одобрит фотографию,
+                этот кот не появляется в битвах.
               </div>
 
             </div>
@@ -2743,9 +1793,8 @@
         if (
           cat.status ===
             "APPROVED" &&
-          Number(
-            cat.calibration_battles
-          ) < 20
+          Number(cat.calibration_battles) <
+            20
         ) {
           extra = `
             <div
@@ -2757,8 +1806,7 @@
             >
 
               <strong>
-                Определяем место
-                в рейтинге
+                Определяем место в рейтинге
               </strong>
 
               <div
@@ -2778,18 +1826,15 @@
         if (
           cat.status ===
             "APPROVED" &&
-          Number(
-            cat.calibration_battles
-          ) >= 20
+          Number(cat.calibration_battles) >=
+            20
         ) {
           const ranking =
             await api(
               "/api/my-cat-ranking"
             );
 
-          if (
-            ranking.calibrated
-          ) {
+          if (ranking.calibrated) {
             extra = `
               <div
                 class="card"
@@ -2822,129 +1867,6 @@
                 </div>
 
               </div>
-
-              <div
-                style="
-                  margin:
-                    20px
-                    2px
-                    10px;
-                  font-size:18px;
-                  font-weight:950;
-                "
-              >
-                Соседи по рейтингу
-              </div>
-
-              <div
-                class="
-                  card
-                  ranking-list
-                "
-              >
-
-                ${ranking.around
-                  .map(
-                    (row) => {
-                      const mine =
-                        String(
-                          row.owner_id
-                        ) ===
-                        String(
-                          state
-                            .me
-                            .user
-                            .id
-                        );
-
-                      const rate =
-                        Number(
-                          row.battles
-                        ) > 0
-                          ? Math.round(
-                              (
-                                Number(
-                                  row.wins
-                                ) /
-                                Number(
-                                  row.battles
-                                )
-                              ) *
-                                1000
-                            ) /
-                            10
-                          : 0;
-
-                      return `
-                        <div
-                          class="
-                            rank-row
-                            ${mine
-                              ? "mine"
-                              : ""}
-                          "
-                        >
-
-                          <div
-                            class="
-                              rank-position
-                            "
-                          >
-                            #${row.position}
-                          </div>
-
-                          <img
-                            class="
-                              rank-photo
-                            "
-                            src="${escapeAttr(
-                              row.image_url
-                            )}"
-                            alt=""
-                          />
-
-                          <div>
-
-                            <div
-                              class="
-                                rank-name
-                              "
-                            >
-                              ${escapeHtml(
-                                row.name
-                              )}
-
-                              ${mine
-                                ? " — ВЫ"
-                                : ""}
-                            </div>
-
-                            <div
-                              class="
-                                rank-meta
-                              "
-                            >
-                              ${row.battles}
-                              сравнений
-                            </div>
-
-                          </div>
-
-                          <div
-                            class="
-                              rank-rate
-                            "
-                          >
-                            ${rate}%
-                          </div>
-
-                        </div>
-                      `;
-                    }
-                  )
-                  .join("")}
-
-              </div>
             `;
           }
         }
@@ -2954,101 +1876,60 @@
 
             <img
               class="my-cat-photo"
-              src="${escapeAttr(
-                cat.image_url
-              )}"
+              src="${escapeAttr(cat.image_url)}"
               alt=""
             />
 
-            <div
-              class="my-cat-info"
-            >
+            <div class="my-cat-info">
 
-              <div
-                class="my-cat-name"
-              >
-                ${escapeHtml(
-                  cat.name
-                )}
+              <div class="my-cat-name">
+                ${escapeHtml(cat.name)}
               </div>
 
-              <div
-                class="
-                  status
-                  ${cat.status}
-                "
-              >
-                ${statusName(
-                  cat.status
-                )}
+              <div class="status ${cat.status}">
+                ${statusName(cat.status)}
               </div>
 
-              <div
-                class="stats-grid"
-              >
+              <div class="stats-grid">
 
                 <div class="stat">
-
-                  <div
-                    class="stat-value"
-                  >
+                  <div class="stat-value">
                     ${battles}
                   </div>
 
-                  <div
-                    class="stat-label"
-                  >
+                  <div class="stat-label">
                     Сравнений
                   </div>
-
                 </div>
 
                 <div class="stat">
-
-                  <div
-                    class="stat-value"
-                  >
+                  <div class="stat-value">
                     ${winRate}%
                   </div>
 
-                  <div
-                    class="stat-label"
-                  >
+                  <div class="stat-label">
                     Выбирают
                   </div>
-
                 </div>
 
                 <div class="stat">
-
-                  <div
-                    class="stat-value"
-                  >
+                  <div class="stat-value">
                     ${wins}
                   </div>
 
-                  <div
-                    class="stat-label"
-                  >
+                  <div class="stat-label">
                     Побед
                   </div>
-
                 </div>
 
                 <div class="stat">
-
-                  <div
-                    class="stat-value"
-                  >
+                  <div class="stat-value">
                     ${cat.losses || 0}
                   </div>
 
-                  <div
-                    class="stat-label"
-                  >
+                  <div class="stat-label">
                     Поражений
                   </div>
-
                 </div>
 
               </div>
@@ -3060,29 +1941,22 @@
           ${extra}
         `;
       } catch (error) {
-        console.error(
-          error
-        );
+        console.error(error);
 
         container.innerHTML = `
           <div class="empty">
-            Не удалось загрузить
-            данные кота.
+            Не удалось загрузить данные кота.
           </div>
         `;
       }
     }
 
-    function renderAddCatForm(
-      container
-    ) {
+    function renderAddCatForm(container) {
       state.selectedImageData =
         null;
 
       container.innerHTML = `
-        <div
-          class="card form"
-        >
+        <div class="card form">
 
           <div
             style="
@@ -3095,10 +1969,7 @@
 
           <div
             style="
-              margin:
-                7px
-                0
-                20px;
+              margin:7px 0 20px;
               text-align:center;
               font-size:22px;
               font-weight:950;
@@ -3146,33 +2017,23 @@
                 class="upload-placeholder"
               >
 
-                <div
-                  class="upload-emoji"
-                >
+                <div class="upload-emoji">
                   📷
                 </div>
 
-                <div
-                  class="upload-title"
-                >
+                <div class="upload-title">
                   Выбрать фотографию
                 </div>
 
-                <div
-                  class="upload-sub"
-                >
-                  Нажми сюда и выбери
-                  фото кота на iPhone
+                <div class="upload-sub">
+                  Нажми сюда и выбери фото кота на iPhone
                 </div>
 
               </div>
 
               <img
                 id="photoPreview"
-                class="
-                  photo-preview
-                  hidden
-                "
+                class="photo-preview hidden"
                 alt=""
               />
 
@@ -3192,18 +2053,13 @@
               line-height:1.5;
             "
           >
-            Фото сначала попадёт
-            администратору на проверку.
-            До одобрения оно не участвует
-            в битвах.
+            Фото сначала попадёт администратору на проверку.
+            До одобрения оно не участвует в битвах.
           </div>
 
           <button
             id="submitCat"
-            class="
-              btn
-              btn-primary
-            "
+            class="btn btn-primary"
             type="button"
           >
             Отправить на модерацию
@@ -3213,14 +2069,10 @@
       `;
 
       const input =
-        document.getElementById(
-          "catFile"
-        );
+        document.getElementById("catFile");
 
       document
-        .getElementById(
-          "choosePhoto"
-        )
+        .getElementById("choosePhoto")
         .addEventListener(
           "click",
           () =>
@@ -3231,57 +2083,41 @@
         "change",
         async () => {
           const file =
-            input
-              .files
-              ?.[0];
+            input.files?.[0];
 
           if (!file) {
             return;
           }
 
           const status =
-            document.getElementById(
-              "photoStatus"
-            );
+            document.getElementById("photoStatus");
 
           status.textContent =
             "Обрабатываем фотографию…";
 
           try {
             const imageData =
-              await prepareImage(
-                file
-              );
+              await prepareImage(file);
 
             state.selectedImageData =
               imageData;
 
             const preview =
-              document.getElementById(
-                "photoPreview"
-              );
+              document.getElementById("photoPreview");
 
             preview.src =
               imageData;
 
-            preview.classList.remove(
-              "hidden"
-            );
+            preview.classList.remove("hidden");
 
             document
-              .getElementById(
-                "uploadPlaceholder"
-              )
-              .classList.add(
-                "hidden"
-              );
+              .getElementById("uploadPlaceholder")
+              .classList.add("hidden");
 
             status.textContent =
               "Фото готово к загрузке";
           } catch (error) {
-            console.error(
-              error
-            );
+            console.error(error);
 
             state.selectedImageData =
               null;
@@ -3297,9 +2133,7 @@
       );
 
       document
-        .getElementById(
-          "submitCat"
-        )
+        .getElementById("submitCat")
         .addEventListener(
           "click",
           submitCat
@@ -3309,9 +2143,7 @@
     async function submitCat() {
       const name =
         document
-          .getElementById(
-            "newCatName"
-          )
+          .getElementById("newCatName")
           .value
           .trim();
 
@@ -3323,9 +2155,7 @@
         return;
       }
 
-      if (
-        !state.selectedImageData
-      ) {
+      if (!state.selectedImageData) {
         toast(
           "Сначала выбери фотографию"
         );
@@ -3334,9 +2164,7 @@
       }
 
       const button =
-        document.getElementById(
-          "submitCat"
-        );
+        document.getElementById("submitCat");
 
       button.disabled =
         true;
@@ -3348,13 +2176,11 @@
         await api(
           "/api/cats/upload",
           {
-            method:
-              "POST",
+            method: "POST",
 
             body:
               JSON.stringify({
                 name,
-
                 imageData:
                   state.selectedImageData,
               }),
@@ -3370,9 +2196,7 @@
 
         await loadMyCat();
       } catch (error) {
-        console.error(
-          error
-        );
+        console.error(error);
 
         if (
           error.data?.error ===
@@ -3402,9 +2226,7 @@
       }
     }
 
-    function statusName(
-      status
-    ) {
+    function statusName(status) {
       const values = {
         PENDING:
           "На модерации",
@@ -3425,15 +2247,15 @@
       );
     }
 
-    /* =========================
-       ADMIN
-       ========================= */
-
     async function loadAdminQueue() {
       const el =
-        document.getElementById(
-          "adminQueue"
-        );
+        document.getElementById("adminQueue");
+
+      const count =
+        document.getElementById("adminCount");
+
+      count.textContent =
+        "Загрузка…";
 
       el.innerHTML = `
         <div class="loading">
@@ -3447,15 +2269,14 @@
             "/api/admin/pending"
           );
 
-        if (
-          !data.cats.length
-        ) {
+        count.textContent =
+          `${data.cats.length} на модерации`;
+
+        if (!data.cats.length) {
           el.innerHTML = `
             <div class="empty">
 
-              <span
-                class="empty-emoji"
-              >
+              <span class="empty-emoji">
                 😺
               </span>
 
@@ -3472,45 +2293,40 @@
             .map(
               (cat) => `
                 <div
-                  class="
-                    card
-                    admin-cat
-                  "
+                  id="admin-cat-${cat.id}"
+                  class="card admin-cat"
                 >
 
-                  <img
-                    src="${escapeAttr(
-                      cat.image_url
-                    )}"
-                    alt=""
-                  />
+                  <div class="admin-photo-wrap">
 
-                  <div
-                    class="admin-body"
-                  >
+                    <img
+                      src="${escapeAttr(cat.image_url)}"
+                      alt=""
+                    />
 
-                    <div
-                      class="admin-name"
-                    >
-                      ${escapeHtml(
-                        cat.name
-                      )}
+                  </div>
+
+                  <div class="admin-body">
+
+                    <div class="admin-name">
+                      ${escapeHtml(cat.name)}
                     </div>
 
-                    <div
-                      class="admin-meta"
-                    >
+                    <div class="admin-meta">
 
                       Пользователь:
 
                       ${
                         cat.username
                           ? "@" +
-                            escapeHtml(
-                              cat.username
-                            )
+                            escapeHtml(cat.username)
                           : escapeHtml(
-                              cat.first_name ||
+                              [
+                                cat.first_name,
+                                cat.last_name
+                              ]
+                                .filter(Boolean)
+                                .join(" ") ||
                               "без username"
                             )
                       }
@@ -3518,56 +2334,38 @@
                       <br>
 
                       Telegram ID:
+                      ${escapeHtml(cat.telegram_user_id)}
 
-                      ${escapeHtml(
-                        cat.telegram_user_id
-                      )}
+                      <br>
+
+                      Загружено:
+                      ${formatDate(cat.created_at)}
 
                     </div>
 
-                    <div
-                      class="admin-actions"
-                    >
+                    <div class="admin-actions">
 
                       <button
-                        class="
-                          btn
-                          btn-success
-                        "
-                        onclick="
-                          approveCat(
-                            '${cat.id}'
-                          )
-                        "
+                        class="btn btn-success"
+                        onclick="approveCat('${cat.id}')"
                       >
-                        Одобрить
+                        ✅ Одобрить
                       </button>
 
                       <button
                         class="btn"
-                        onclick="
-                          rejectCat(
-                            '${cat.id}'
-                          )
-                        "
+                        onclick="rejectCat('${cat.id}')"
                       >
-                        Отклонить
+                        ❌ Отклонить
                       </button>
 
                     </div>
 
                     <button
-                      class="
-                        btn
-                        btn-danger
-                      "
-                      onclick="
-                        permanentBan(
-                          '${cat.owner_id}'
-                        )
-                      "
+                      class="btn btn-danger admin-ban"
+                      onclick="permanentBan('${cat.owner_id}')"
                     >
-                      Заблокировать навсегда
+                      ⛔ Заблокировать навсегда
                     </button>
 
                   </div>
@@ -3577,26 +2375,35 @@
             )
             .join("");
       } catch (error) {
-        console.error(
-          error
-        );
+        console.error(error);
 
-        el.innerHTML = `
-          <div class="empty">
-            Нет доступа
-            или произошла ошибка.
-          </div>
-        `;
+        count.textContent =
+          "";
+
+        if (
+          error.data?.error ===
+          "ACCESS_DENIED"
+        ) {
+          el.innerHTML = `
+            <div class="empty">
+              У этого аккаунта нет прав модератора.
+            </div>
+          `;
+        } else {
+          el.innerHTML = `
+            <div class="empty">
+              Не удалось загрузить очередь.
+            </div>
+          `;
+        }
       }
     }
 
     window.approveCat =
-      async function(
-        id
-      ) {
+      async function(id) {
         if (
           !confirm(
-            "Одобрить этого кота?"
+            "Одобрить этого кота и допустить его к битвам?"
           )
         ) {
           return;
@@ -3606,30 +2413,33 @@
           await api(
             `/api/admin/cats/${id}/approve`,
             {
-              method:
-                "POST",
+              method: "POST",
             }
           );
 
+          document
+            .getElementById(`admin-cat-${id}`)
+            ?.remove();
+
           toast(
-            "Кот одобрен"
+            "Кот одобрен и допущен к битвам"
           );
 
           await loadAdminQueue();
         } catch (error) {
+          console.error(error);
+
           toast(
-            "Не удалось одобрить"
+            "Не удалось одобрить кота"
           );
         }
       };
 
     window.rejectCat =
-      async function(
-        id
-      ) {
+      async function(id) {
         const reason =
           prompt(
-            "Причина отклонения"
+            "Причина отклонения:"
           );
 
         if (!reason) {
@@ -3640,8 +2450,7 @@
           await api(
             `/api/admin/cats/${id}/reject`,
             {
-              method:
-                "POST",
+              method: "POST",
 
               body:
                 JSON.stringify({
@@ -3649,6 +2458,10 @@
                 }),
             }
           );
+
+          document
+            .getElementById(`admin-cat-${id}`)
+            ?.remove();
 
           toast(
             "Фото отклонено"
@@ -3656,30 +2469,40 @@
 
           await loadAdminQueue();
         } catch (error) {
+          console.error(error);
+
           toast(
-            "Не удалось отклонить"
+            "Не удалось отклонить фото"
           );
         }
       };
 
     window.permanentBan =
-      async function(
-        userId
-      ) {
-        if (
-          !confirm(
-            "Заблокировать пользователя НАВСЕГДА?"
-          )
-        ) {
+      async function(userId) {
+        const firstConfirm =
+          confirm(
+            "Это ПОЛНАЯ блокировка пользователя навсегда. Продолжить?"
+          );
+
+        if (!firstConfirm) {
           return;
         }
 
         const reason =
           prompt(
-            "Причина блокировки"
+            "Причина постоянной блокировки:"
           );
 
         if (!reason) {
+          return;
+        }
+
+        const secondConfirm =
+          confirm(
+            `Подтвердить вечный бан?\n\nПричина: ${reason}`
+          );
+
+        if (!secondConfirm) {
           return;
         }
 
@@ -3687,8 +2510,7 @@
           await api(
             `/api/admin/users/${userId}/permanent-ban`,
             {
-              method:
-                "POST",
+              method: "POST",
 
               body:
                 JSON.stringify({
@@ -3698,24 +2520,35 @@
           );
 
           toast(
-            "Пользователь заблокирован"
+            "Пользователь заблокирован навсегда"
           );
 
           await loadAdminQueue();
         } catch (error) {
+          console.error(error);
+
           toast(
-            "Не удалось заблокировать"
+            "Не удалось заблокировать пользователя"
           );
         }
       };
 
-    /* =========================
-       ESCAPE
-       ========================= */
+    function formatDate(value) {
+      if (!value) {
+        return "—";
+      }
 
-    function escapeHtml(
-      value
-    ) {
+      try {
+        return new Date(value)
+          .toLocaleString(
+            "ru-RU"
+          );
+      } catch {
+        return String(value);
+      }
+    }
+
+    function escapeHtml(value) {
       return String(
         value ?? ""
       )
@@ -3741,27 +2574,16 @@
         );
     }
 
-    function escapeAttr(
-      value
-    ) {
-      return escapeHtml(
-        value
-      );
+    function escapeAttr(value) {
+      return escapeHtml(value);
     }
-
-    /* =========================
-       START
-       ========================= */
 
     async function start() {
       try {
         await loadMe();
-
         await loadBattle();
       } catch (error) {
-        console.error(
-          error
-        );
+        console.error(error);
 
         if (
           error.message ===
@@ -3771,20 +2593,15 @@
         }
 
         document
-          .getElementById(
-            "battleLoading"
-          )
+          .getElementById("battleLoading")
           .innerHTML = `
-            <span
-              style="font-size:52px"
-            >
+            <span style="font-size:52px">
               🐈
             </span>
 
             <br><br>
 
-            Не удалось подключиться
-            к КОТОБОРУ.
+            Не удалось подключиться к КОТОБОРУ.
           `;
       }
     }
@@ -3793,5 +2610,4 @@
   </script>
 
 </body>
-
 </html>
