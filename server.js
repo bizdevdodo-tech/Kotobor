@@ -317,6 +317,9 @@ async function initDatabase() {
       ADD COLUMN IF NOT EXISTS
         image_data BYTEA;
 
+    ALTER TABLE cats
+      ALTER COLUMN image_url DROP NOT NULL;
+
     CREATE TABLE IF NOT EXISTS votes (
       id BIGSERIAL PRIMARY KEY,
 
