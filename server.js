@@ -101,15 +101,7 @@ app.use(
   })
 );
 
-app.use(
-  "/api/",
-  rateLimit({
-    windowMs: 60 * 1000,
-    limit: 300,
-    standardHeaders: true,
-    legacyHeaders: false,
-  })
-);
+app.set("trust proxy", 1);
 
 app.use(
   express.static(
