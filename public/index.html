@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1, viewport-fit=cover"
@@ -343,11 +344,6 @@
       font-weight: 850;
     }
 
-    .rank-row.mine {
-      border-left: 3px solid var(--accent);
-      background: rgba(255,101,53,.10);
-    }
-
     .my-cat-photo {
       width: 100%;
       aspect-ratio: 1 / 1;
@@ -547,11 +543,6 @@
       overflow: hidden;
     }
 
-    .admin-photo-wrap {
-      position: relative;
-      background: #090a0d;
-    }
-
     .admin-cat img {
       width: 100%;
       max-height: 520px;
@@ -585,10 +576,6 @@
 
     .admin-actions .btn {
       margin: 0;
-    }
-
-    .admin-ban {
-      margin-top: 8px;
     }
 
     .nav {
@@ -653,6 +640,29 @@
       display: block;
       margin-bottom: 12px;
       font-size: 55px;
+    }
+
+    .rejected-box {
+      padding: 22px;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+
+    .rejected-icon {
+      font-size: 58px;
+    }
+
+    .rejected-title {
+      margin-top: 8px;
+      font-size: 25px;
+      font-weight: 950;
+    }
+
+    .rejected-text {
+      margin-top: 8px;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
     }
 
     .toast {
@@ -842,10 +852,11 @@
         </div>
 
         <div class="section-subtitle">
-          Здесь появляются все новые фотографии до выхода в битвы.
+          Здесь появляются новые фотографии до выхода в битвы.
         </div>
 
         <div class="admin-toolbar">
+
           <div id="adminCount" class="admin-count">
             Загрузка…
           </div>
@@ -857,6 +868,7 @@
           >
             ↻ Обновить
           </button>
+
         </div>
 
         <div id="adminQueue">
@@ -926,8 +938,7 @@
       me: null,
       battle: null,
       timer: null,
-      currentPage: "battle",
-      selectedImageData: null,
+      selectedImageData: null
     };
 
     async function api(url, options = {}) {
@@ -970,7 +981,6 @@
           "PERMANENT_BAN"
         ) {
           renderBan();
-          throw new Error("PERMANENT_BAN");
         }
 
         const error =
@@ -998,9 +1008,8 @@
       el.classList.add("show");
 
       setTimeout(
-        () => {
-          el.classList.remove("show");
-        },
+        () =>
+          el.classList.remove("show"),
         2400
       );
     }
@@ -1016,24 +1025,16 @@
             background:#0b0c10;
             color:white;
             text-align:center;
-            font-family:-apple-system,BlinkMacSystemFont,sans-serif;
           "
         >
           <div>
-            <div style="font-size:70px">
-              ⛔
-            </div>
+            <div style="font-size:70px">⛔</div>
 
             <h1>
               Вы заблокированы навсегда
             </h1>
 
-            <p
-              style="
-                color:#aaa;
-                line-height:1.5;
-              "
-            >
+            <p style="color:#aaa;">
               Этот аккаунт больше не может пользоваться КОТОБОРОМ.
             </p>
           </div>
@@ -1043,60 +1044,53 @@
 
     document
       .querySelectorAll(".nav-btn")
-      .forEach(
-        (button) => {
-          button.addEventListener(
-            "click",
-            async () => {
-              const page =
-                button.dataset.page;
+      .forEach(button => {
 
-              if (!page) {
-                return;
-              }
+        button.addEventListener(
+          "click",
+          async () => {
 
-              document
-                .querySelectorAll(".nav-btn")
-                .forEach(
-                  (item) =>
-                    item.classList.remove("active")
-                );
+            const page =
+              button.dataset.page;
 
-              button.classList.add("active");
+            document
+              .querySelectorAll(".nav-btn")
+              .forEach(
+                item =>
+                  item.classList.remove("active")
+              );
 
-              document
-                .querySelectorAll(".page")
-                .forEach(
-                  (item) =>
-                    item.classList.remove("active")
-                );
+            button.classList.add("active");
 
-              document
-                .getElementById(`page-${page}`)
-                .classList.add("active");
+            document
+              .querySelectorAll(".page")
+              .forEach(
+                item =>
+                  item.classList.remove("active")
+              );
 
-              state.currentPage =
-                page;
+            document
+              .getElementById(`page-${page}`)
+              .classList.add("active");
 
-              if (page === "ranking") {
-                await loadRanking();
-              }
-
-              if (page === "mycat") {
-                await loadMyCat();
-              }
-
-              if (page === "invite") {
-                renderInvite();
-              }
-
-              if (page === "admin") {
-                await loadAdminQueue();
-              }
+            if (page === "ranking") {
+              await loadRanking();
             }
-          );
-        }
-      );
+
+            if (page === "mycat") {
+              await loadMyCat();
+            }
+
+            if (page === "invite") {
+              renderInvite();
+            }
+
+            if (page === "admin") {
+              await loadAdminQueue();
+            }
+          }
+        );
+      });
 
     document
       .getElementById("adminRefresh")
@@ -1125,10 +1119,6 @@
         document
           .getElementById("adminNav")
           .classList.remove("hidden");
-      } else {
-        document
-          .getElementById("adminNav")
-          .classList.add("hidden");
       }
 
       renderInvite();
@@ -1143,16 +1133,12 @@
         document.getElementById("votesPill");
 
       if (!value) {
-        el.textContent =
-          "…";
-
+        el.textContent = "…";
         return;
       }
 
       if (value.unlimited) {
-        el.textContent =
-          "∞ голосов";
-
+        el.textContent = "∞";
         return;
       }
 
@@ -1204,15 +1190,22 @@
         loading.classList.add("hidden");
         box.classList.remove("hidden");
         help.classList.remove("hidden");
+
       } catch (error) {
+
         loading.classList.add("hidden");
 
         if (
           error.data?.error ===
           "VOTE_LIMIT"
         ) {
-          updateVotePill(error.data.votes);
-          showLimit(error.data.votes.resetsAt);
+          updateVotePill(
+            error.data.votes
+          );
+
+          showLimit(
+            error.data.votes.resetsAt
+          );
 
           return;
         }
@@ -1236,8 +1229,6 @@
           return;
         }
 
-        console.error(error);
-
         loading.textContent =
           "Не удалось загрузить битву.";
 
@@ -1253,15 +1244,6 @@
       const [a, b] =
         state.battle.cats;
 
-      const buttonA =
-        document.getElementById("catA");
-
-      const buttonB =
-        document.getElementById("catB");
-
-      buttonA.disabled = true;
-      buttonB.disabled = true;
-
       try {
         const data =
           await api(
@@ -1273,12 +1255,14 @@
                 JSON.stringify({
                   catAId: a.id,
                   catBId: b.id,
-                  winnerId,
-                }),
+                  winnerId
+                })
             }
           );
 
-        updateVotePill(data.votes);
+        updateVotePill(
+          data.votes
+        );
 
         try {
           tg
@@ -1287,8 +1271,8 @@
         } catch {}
 
         await loadBattle();
+
       } catch (error) {
-        console.error(error);
 
         if (
           error.data?.error ===
@@ -1297,12 +1281,13 @@
           showLimit(
             error.data.votes.resetsAt
           );
-        } else {
-          toast("Голос не сохранился");
+
+          return;
         }
-      } finally {
-        buttonA.disabled = false;
-        buttonB.disabled = false;
+
+        toast(
+          "Голос не сохранился"
+        );
       }
     }
 
@@ -1346,11 +1331,6 @@
         .classList.remove("hidden");
 
       if (!resetsAt) {
-        document
-          .getElementById("limitTimer")
-          .textContent =
-            "до восстановления";
-
         return;
       }
 
@@ -1404,10 +1384,7 @@
 
     async function shareKotobor() {
       const telegramId =
-        state
-          .me
-          ?.user
-          ?.telegramUserId;
+        state.me?.user?.telegramUserId;
 
       const url =
         telegramId
@@ -1418,64 +1395,42 @@
         "Выбирай лучших котов в КОТОБОРЕ 🐈⚔️";
 
       try {
-        if (
-          tg &&
-          typeof tg.openTelegramLink ===
-            "function"
-        ) {
-          const shareUrl =
+        if (tg?.openTelegramLink) {
+          tg.openTelegramLink(
             "https://t.me/share/url" +
             "?url=" +
             encodeURIComponent(url) +
             "&text=" +
-            encodeURIComponent(text);
-
-          tg.openTelegramLink(
-            shareUrl
+            encodeURIComponent(text)
           );
-        } else if (navigator.share) {
-          await navigator.share({
-            title: "КОТОБОР",
-            text,
-            url,
-          });
-        } else {
-          await navigator
-            .clipboard
-            .writeText(
-              `${text} ${url}`
-            );
         }
 
         const reward =
           await api(
             "/api/share-reward",
             {
-              method: "POST",
+              method: "POST"
             }
           );
-
-        state.me.votes =
-          reward.votes;
 
         updateVotePill(
           reward.votes
         );
 
-        toast("+5 голосов 🐾");
+        toast(
+          "+5 голосов 🐾"
+        );
+
       } catch (error) {
+
         if (
           error.data?.error ===
           "SHARE_COOLDOWN"
         ) {
           toast(
-            "Бонус снова будет доступен через 5 часов"
+            "Бонус уже получен"
           );
-
-          return;
         }
-
-        console.error(error);
       }
     }
 
@@ -1540,13 +1495,11 @@
         if (!data.ranking.length) {
           el.innerHTML = `
             <div class="empty">
-
               <span class="empty-emoji">
                 🏆
               </span>
 
               Пока никто не прошёл калибровку.
-
             </div>
           `;
 
@@ -1555,64 +1508,51 @@
 
         el.innerHTML =
           data.ranking
-            .map(
-              (cat) => {
-                const position =
-                  Number(cat.position);
+            .map(cat => {
 
-                let medal =
-                  `#${position}`;
+              const position =
+                Number(cat.position);
 
-                if (position === 1) {
-                  medal = "🥇";
-                }
+              let medal =
+                `#${position}`;
 
-                if (position === 2) {
-                  medal = "🥈";
-                }
+              if (position === 1) medal = "🥇";
+              if (position === 2) medal = "🥈";
+              if (position === 3) medal = "🥉";
 
-                if (position === 3) {
-                  medal = "🥉";
-                }
+              return `
+                <div class="rank-row">
 
-                return `
-                  <div class="rank-row">
-
-                    <div class="rank-position">
-                      ${medal}
-                    </div>
-
-                    <img
-                      class="rank-photo"
-                      src="${escapeAttr(cat.image_url)}"
-                      alt=""
-                    />
-
-                    <div>
-
-                      <div class="rank-name">
-                        ${escapeHtml(cat.name)}
-                      </div>
-
-                      <div class="rank-meta">
-                        ${cat.battles}
-                        сравнений
-                      </div>
-
-                    </div>
-
-                    <div class="rank-rate">
-                      ${cat.winRate}%
-                    </div>
-
+                  <div class="rank-position">
+                    ${medal}
                   </div>
-                `;
-              }
-            )
-            .join("");
-      } catch (error) {
-        console.error(error);
 
+                  <img
+                    class="rank-photo"
+                    src="${escapeAttr(cat.image_url)}"
+                    alt=""
+                  />
+
+                  <div>
+                    <div class="rank-name">
+                      ${escapeHtml(cat.name)}
+                    </div>
+
+                    <div class="rank-meta">
+                      ${cat.battles} сравнений
+                    </div>
+                  </div>
+
+                  <div class="rank-rate">
+                    ${cat.winRate}%
+                  </div>
+
+                </div>
+              `;
+            })
+            .join("");
+
+      } catch {
         el.innerHTML = `
           <div class="empty">
             Не удалось загрузить рейтинг.
@@ -1624,6 +1564,7 @@
     function readFileAsDataURL(file) {
       return new Promise(
         (resolve, reject) => {
+
           const reader =
             new FileReader();
 
@@ -1642,6 +1583,7 @@
     function loadImage(src) {
       return new Promise(
         (resolve, reject) => {
+
           const image =
             new Image();
 
@@ -1721,7 +1663,9 @@
 
     async function loadMyCat() {
       const container =
-        document.getElementById("myCatContainer");
+        document.getElementById(
+          "myCatContainer"
+        );
 
       container.innerHTML = `
         <div class="loading">
@@ -1743,16 +1687,88 @@
           return;
         }
 
+        /*
+          КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ:
+          после отказа пользователь
+          сразу может загрузить нового кота.
+        */
+
+        if (
+          cat.status ===
+          "REJECTED"
+        ) {
+          container.innerHTML = `
+            <div class="card rejected-box">
+
+              <div class="rejected-icon">
+                😿
+              </div>
+
+              <div class="rejected-title">
+                Фото отклонено
+              </div>
+
+              <div class="rejected-text">
+                Эта фотография не прошла модерацию.
+                Можно сразу отправить другую фотографию
+                или другого кота.
+              </div>
+
+            </div>
+
+            <div id="newCatAfterReject"></div>
+          `;
+
+          renderAddCatForm(
+            document.getElementById(
+              "newCatAfterReject"
+            )
+          );
+
+          return;
+        }
+
+        if (
+          cat.status ===
+          "HIDDEN"
+        ) {
+          container.innerHTML = `
+            <div class="card rejected-box">
+
+              <div class="rejected-icon">
+                ⛔
+              </div>
+
+              <div class="rejected-title">
+                Кот скрыт
+              </div>
+
+              <div class="rejected-text">
+                Эта запись недоступна.
+              </div>
+
+            </div>
+          `;
+
+          return;
+        }
+
         const battles =
-          Number(cat.battles || 0);
+          Number(
+            cat.battles || 0
+          );
 
         const wins =
-          Number(cat.wins || 0);
+          Number(
+            cat.wins || 0
+          );
 
         const winRate =
           battles
             ? Math.round(
-                wins / battles * 1000
+                wins /
+                battles *
+                1000
               ) / 10
             : 0;
 
@@ -1770,7 +1786,6 @@
                 padding:18px;
               "
             >
-
               <strong>
                 Фото ожидает модерации
               </strong>
@@ -1785,16 +1800,15 @@
                 Пока модератор не одобрит фотографию,
                 этот кот не появляется в битвах.
               </div>
-
             </div>
           `;
         }
 
         if (
-          cat.status ===
-            "APPROVED" &&
-          Number(cat.calibration_battles) <
-            20
+          cat.status === "APPROVED" &&
+          Number(
+            cat.calibration_battles
+          ) < 20
         ) {
           extra = `
             <div
@@ -1804,7 +1818,6 @@
                 padding:18px;
               "
             >
-
               <strong>
                 Определяем место в рейтинге
               </strong>
@@ -1818,23 +1831,24 @@
                 ${cat.calibration_battles}
                 / 20 сравнений
               </div>
-
             </div>
           `;
         }
 
         if (
-          cat.status ===
-            "APPROVED" &&
-          Number(cat.calibration_battles) >=
-            20
+          cat.status === "APPROVED" &&
+          Number(
+            cat.calibration_battles
+          ) >= 20
         ) {
           const ranking =
             await api(
               "/api/my-cat-ranking"
             );
 
-          if (ranking.calibrated) {
+          if (
+            ranking.calibrated
+          ) {
             extra = `
               <div
                 class="card"
@@ -1843,7 +1857,6 @@
                   padding:18px;
                 "
               >
-
                 <div
                   style="
                     font-size:27px;
@@ -1865,7 +1878,6 @@
                   ${ranking.percentile}%
                   котов
                 </div>
-
               </div>
             `;
           }
@@ -1940,6 +1952,7 @@
 
           ${extra}
         `;
+
       } catch (error) {
         console.error(error);
 
@@ -2016,7 +2029,6 @@
                 id="uploadPlaceholder"
                 class="upload-placeholder"
               >
-
                 <div class="upload-emoji">
                   📷
                 </div>
@@ -2026,9 +2038,8 @@
                 </div>
 
                 <div class="upload-sub">
-                  Нажми сюда и выбери фото кота на iPhone
+                  Нажми сюда и выбери фото кота
                 </div>
-
               </div>
 
               <img
@@ -2053,8 +2064,8 @@
               line-height:1.5;
             "
           >
-            Фото сначала попадёт администратору на проверку.
-            До одобрения оно не участвует в битвах.
+            Фото сначала попадёт администратору
+            на проверку.
           </div>
 
           <button
@@ -2069,19 +2080,23 @@
       `;
 
       const input =
-        document.getElementById("catFile");
+        document.getElementById(
+          "catFile"
+        );
 
       document
-        .getElementById("choosePhoto")
+        .getElementById(
+          "choosePhoto"
+        )
         .addEventListener(
           "click",
-          () =>
-            input.click()
+          () => input.click()
         );
 
       input.addEventListener(
         "change",
         async () => {
+
           const file =
             input.files?.[0];
 
@@ -2090,32 +2105,45 @@
           }
 
           const status =
-            document.getElementById("photoStatus");
+            document.getElementById(
+              "photoStatus"
+            );
 
           status.textContent =
             "Обрабатываем фотографию…";
 
           try {
             const imageData =
-              await prepareImage(file);
+              await prepareImage(
+                file
+              );
 
             state.selectedImageData =
               imageData;
 
             const preview =
-              document.getElementById("photoPreview");
+              document.getElementById(
+                "photoPreview"
+              );
 
             preview.src =
               imageData;
 
-            preview.classList.remove("hidden");
+            preview.classList.remove(
+              "hidden"
+            );
 
             document
-              .getElementById("uploadPlaceholder")
-              .classList.add("hidden");
+              .getElementById(
+                "uploadPlaceholder"
+              )
+              .classList.add(
+                "hidden"
+              );
 
             status.textContent =
               "Фото готово к загрузке";
+
           } catch (error) {
             console.error(error);
 
@@ -2126,14 +2154,16 @@
               "";
 
             toast(
-              "Не удалось прочитать это фото"
+              "Не удалось прочитать фото"
             );
           }
         }
       );
 
       document
-        .getElementById("submitCat")
+        .getElementById(
+          "submitCat"
+        )
         .addEventListener(
           "click",
           submitCat
@@ -2143,7 +2173,9 @@
     async function submitCat() {
       const name =
         document
-          .getElementById("newCatName")
+          .getElementById(
+            "newCatName"
+          )
           .value
           .trim();
 
@@ -2155,7 +2187,9 @@
         return;
       }
 
-      if (!state.selectedImageData) {
+      if (
+        !state.selectedImageData
+      ) {
         toast(
           "Сначала выбери фотографию"
         );
@@ -2164,7 +2198,9 @@
       }
 
       const button =
-        document.getElementById("submitCat");
+        document.getElementById(
+          "submitCat"
+        );
 
       button.disabled =
         true;
@@ -2182,8 +2218,8 @@
               JSON.stringify({
                 name,
                 imageData:
-                  state.selectedImageData,
-              }),
+                  state.selectedImageData
+              })
           }
         );
 
@@ -2195,6 +2231,7 @@
         );
 
         await loadMyCat();
+
       } catch (error) {
         console.error(error);
 
@@ -2205,18 +2242,12 @@
           toast(
             "У тебя уже есть кот на модерации или в рейтинге"
           );
-        } else if (
-          error.data?.error ===
-          "INVALID_IMAGE"
-        ) {
-          toast(
-            "Не удалось обработать фотографию"
-          );
         } else {
           toast(
             "Ошибка загрузки фотографии"
           );
         }
+
       } finally {
         button.disabled =
           false;
@@ -2238,7 +2269,7 @@
           "Отклонён",
 
         HIDDEN:
-          "Скрыт",
+          "Скрыт"
       };
 
       return (
@@ -2249,10 +2280,14 @@
 
     async function loadAdminQueue() {
       const el =
-        document.getElementById("adminQueue");
+        document.getElementById(
+          "adminQueue"
+        );
 
       const count =
-        document.getElementById("adminCount");
+        document.getElementById(
+          "adminCount"
+        );
 
       count.textContent =
         "Загрузка…";
@@ -2275,13 +2310,11 @@
         if (!data.cats.length) {
           el.innerHTML = `
             <div class="empty">
-
               <span class="empty-emoji">
                 😺
               </span>
 
               Очередь пуста.
-
             </div>
           `;
 
@@ -2290,120 +2323,89 @@
 
         el.innerHTML =
           data.cats
-            .map(
-              (cat) => `
-                <div
-                  id="admin-cat-${cat.id}"
-                  class="card admin-cat"
-                >
+            .map(cat => `
+              <div
+                id="admin-cat-${cat.id}"
+                class="card admin-cat"
+              >
 
-                  <div class="admin-photo-wrap">
+                <img
+                  src="${escapeAttr(cat.image_url)}"
+                  alt=""
+                />
 
-                    <img
-                      src="${escapeAttr(cat.image_url)}"
-                      alt=""
-                    />
+                <div class="admin-body">
+
+                  <div class="admin-name">
+                    ${escapeHtml(cat.name)}
+                  </div>
+
+                  <div class="admin-meta">
+
+                    Пользователь:
+                    ${
+                      cat.username
+                        ? "@" + escapeHtml(cat.username)
+                        : escapeHtml(
+                            cat.first_name ||
+                            "без username"
+                          )
+                    }
+
+                    <br>
+
+                    Telegram ID:
+                    ${escapeHtml(cat.telegram_user_id)}
 
                   </div>
 
-                  <div class="admin-body">
-
-                    <div class="admin-name">
-                      ${escapeHtml(cat.name)}
-                    </div>
-
-                    <div class="admin-meta">
-
-                      Пользователь:
-
-                      ${
-                        cat.username
-                          ? "@" +
-                            escapeHtml(cat.username)
-                          : escapeHtml(
-                              [
-                                cat.first_name,
-                                cat.last_name
-                              ]
-                                .filter(Boolean)
-                                .join(" ") ||
-                              "без username"
-                            )
-                      }
-
-                      <br>
-
-                      Telegram ID:
-                      ${escapeHtml(cat.telegram_user_id)}
-
-                      <br>
-
-                      Загружено:
-                      ${formatDate(cat.created_at)}
-
-                    </div>
-
-                    <div class="admin-actions">
-
-                      <button
-                        class="btn btn-success"
-                        onclick="approveCat('${cat.id}')"
-                      >
-                        ✅ Одобрить
-                      </button>
-
-                      <button
-                        class="btn"
-                        onclick="rejectCat('${cat.id}')"
-                      >
-                        ❌ Отклонить
-                      </button>
-
-                    </div>
+                  <div class="admin-actions">
 
                     <button
-                      class="btn btn-danger admin-ban"
-                      onclick="permanentBan('${cat.owner_id}')"
+                      class="btn btn-success"
+                      onclick="approveCat('${cat.id}')"
                     >
-                      ⛔ Заблокировать навсегда
+                      ✅ Одобрить
+                    </button>
+
+                    <button
+                      class="btn"
+                      onclick="rejectCat('${cat.id}')"
+                    >
+                      ❌ Отклонить
                     </button>
 
                   </div>
 
+                  <button
+                    class="btn btn-danger"
+                    onclick="permanentBan('${cat.owner_id}')"
+                  >
+                    ⛔ Заблокировать навсегда
+                  </button>
+
                 </div>
-              `
-            )
+              </div>
+            `)
             .join("");
+
       } catch (error) {
         console.error(error);
 
-        count.textContent =
-          "";
-
-        if (
-          error.data?.error ===
-          "ACCESS_DENIED"
-        ) {
-          el.innerHTML = `
-            <div class="empty">
-              У этого аккаунта нет прав модератора.
-            </div>
-          `;
-        } else {
-          el.innerHTML = `
-            <div class="empty">
-              Не удалось загрузить очередь.
-            </div>
-          `;
-        }
+        el.innerHTML = `
+          <div class="empty">
+            Не удалось загрузить очередь.
+          </div>
+        `;
       }
     }
 
     window.approveCat =
       async function(id) {
+
         if (
           !confirm(
-            "Одобрить этого кота и допустить его к битвам?"
+            "Одобрить кота?"
           )
         ) {
           return;
@@ -2413,30 +2415,26 @@
           await api(
             `/api/admin/cats/${id}/approve`,
             {
-              method: "POST",
+              method: "POST"
             }
           );
 
-          document
-            .getElementById(`admin-cat-${id}`)
-            ?.remove();
-
           toast(
-            "Кот одобрен и допущен к битвам"
+            "Кот одобрен"
           );
 
           await loadAdminQueue();
-        } catch (error) {
-          console.error(error);
 
+        } catch {
           toast(
-            "Не удалось одобрить кота"
+            "Ошибка одобрения"
           );
         }
       };
 
     window.rejectCat =
       async function(id) {
+
         const reason =
           prompt(
             "Причина отклонения:"
@@ -2454,55 +2452,41 @@
 
               body:
                 JSON.stringify({
-                  reason,
-                }),
+                  reason
+                })
             }
           );
-
-          document
-            .getElementById(`admin-cat-${id}`)
-            ?.remove();
 
           toast(
             "Фото отклонено"
           );
 
           await loadAdminQueue();
-        } catch (error) {
-          console.error(error);
 
+        } catch {
           toast(
-            "Не удалось отклонить фото"
+            "Ошибка отклонения"
           );
         }
       };
 
     window.permanentBan =
       async function(userId) {
-        const firstConfirm =
-          confirm(
-            "Это ПОЛНАЯ блокировка пользователя навсегда. Продолжить?"
-          );
 
-        if (!firstConfirm) {
+        if (
+          !confirm(
+            "Заблокировать пользователя навсегда?"
+          )
+        ) {
           return;
         }
 
         const reason =
           prompt(
-            "Причина постоянной блокировки:"
+            "Причина блокировки:"
           );
 
         if (!reason) {
-          return;
-        }
-
-        const secondConfirm =
-          confirm(
-            `Подтвердить вечный бан?\n\nПричина: ${reason}`
-          );
-
-        if (!secondConfirm) {
           return;
         }
 
@@ -2514,64 +2498,33 @@
 
               body:
                 JSON.stringify({
-                  reason,
-                }),
+                  reason
+                })
             }
           );
 
           toast(
-            "Пользователь заблокирован навсегда"
+            "Пользователь заблокирован"
           );
 
           await loadAdminQueue();
-        } catch (error) {
-          console.error(error);
 
+        } catch {
           toast(
-            "Не удалось заблокировать пользователя"
+            "Ошибка блокировки"
           );
         }
       };
-
-    function formatDate(value) {
-      if (!value) {
-        return "—";
-      }
-
-      try {
-        return new Date(value)
-          .toLocaleString(
-            "ru-RU"
-          );
-      } catch {
-        return String(value);
-      }
-    }
 
     function escapeHtml(value) {
       return String(
         value ?? ""
       )
-        .replaceAll(
-          "&",
-          "&amp;"
-        )
-        .replaceAll(
-          "<",
-          "&lt;"
-        )
-        .replaceAll(
-          ">",
-          "&gt;"
-        )
-        .replaceAll(
-          '"',
-          "&quot;"
-        )
-        .replaceAll(
-          "'",
-          "&#039;"
-        );
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
     }
 
     function escapeAttr(value) {
@@ -2582,27 +2535,16 @@
       try {
         await loadMe();
         await loadBattle();
+
       } catch (error) {
         console.error(error);
 
-        if (
-          error.message ===
-          "PERMANENT_BAN"
-        ) {
-          return;
-        }
-
         document
-          .getElementById("battleLoading")
-          .innerHTML = `
-            <span style="font-size:52px">
-              🐈
-            </span>
-
-            <br><br>
-
-            Не удалось подключиться к КОТОБОРУ.
-          `;
+          .getElementById(
+            "battleLoading"
+          )
+          .textContent =
+            "Не удалось подключиться к КОТОБОРУ.";
       }
     }
 
