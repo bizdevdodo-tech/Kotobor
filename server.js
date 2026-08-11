@@ -9,27 +9,25 @@ require("dotenv").config();
 
 /* =========================================================
    КОТОБОР
-   Backend + Telegram Bot + PostgreSQL
    ========================================================= */
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 /*
-  Railway стоит перед приложением как reverse proxy.
-  Нужен trust proxy ДО express-rate-limit.
+  Railway работает через reverse proxy.
 */
 app.set("trust proxy", 1);
 
-/*
-  Поддерживаем оба имени переменной:
-  BOT_TOKEN — то, что уже добавлено в Railway.
-  TELEGRAM_BOT_TOKEN — альтернативное имя.
-*/
-const TELEGRAM_BOT_TOKEN =
+const BOT_TOKEN =
   process.env.BOT_TOKEN ||
   process.env.TELEGRAM_BOT_TOKEN ||
   "";
+
+const OWNER_TELEGRAM_ID =
+  process.env.OWNER_TELEGRAM_ID
+    ? String(process.env.OWNER_TELEGRAM_ID)
+    : null;
 
 const APP_URL =
   process.env.APP_URL ||
@@ -37,10 +35,7 @@ const APP_URL =
     ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
     : "https://kotobor-production.up.railway.app");
 
-const OWNER_TELEGRAM_ID =
-  process.env.OWNER_TELEGRAM_ID
-    ? String(process.env.OWNER_TELEGRAM_ID)
-    : null;
+const BOT_USERNAME = "Kotobor_bot";
 
 const FIVE_HOURS_MS =
   5 * 60 * 60 * 1000;
@@ -49,6 +44,9 @@ const BASE_LIMIT = 5;
 const CAT_LIMIT = 10;
 const SHARE_BONUS = 5;
 const REFERRALS_FOR_UNLIMITED = 10;
+
+const MAX_IMAGE_BYTES =
+  6 * 1024 * 1024;
 
 const BAN_MESSAGE = `⛔ Вы заблокированы навсегда.
 
@@ -67,10 +65,15 @@ const BAN_MESSAGE = `⛔ Вы заблокированы навсегда.
    ========================================================= */
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString:
+    process.env.DATABASE_URL,
+
   ssl:
-    process.env.NODE_ENV === "production"
-      ? { rejectUnauthorized: false }
+    process.env.NODE_ENV ===
+    "production"
+      ? {
+          rejectUnauthorized: false,
+        }
       : false,
 });
 
@@ -81,18 +84,20 @@ const pool = new Pool({
 app.use(
   helmet({
     contentSecurityPolicy: false,
+    crossOriginResourcePolicy: false,
   })
 );
 
 app.use(
   express.json({
-    limit: "2mb",
+    limit: "12mb",
   })
 );
 
 app.use(
   express.urlencoded({
     extended: true,
+    limit: "12mb",
   })
 );
 
@@ -108,7 +113,10 @@ app.use(
 
 app.use(
   express.static(
-    path.join(__dirname, "public")
+    path.join(
+      __dirname,
+      "public"
+    )
   )
 );
 
@@ -121,38 +129,67 @@ function now() {
 }
 
 function sleep(ms) {
-  return new Promise((resolve) =>
-    setTimeout(resolve, ms)
+  return new Promise(
+    (resolve) =>
+      setTimeout(resolve, ms)
   );
 }
 
 function safeUser(user) {
   return {
     id: user.id,
+
     telegramUserId:
       user.telegram_user_id,
-    username: user.username,
-    firstName: user.first_name,
-    lastName: user.last_name,
-    role: user.role,
-    status: user.status,
+
+    username:
+      user.username,
+
+    firstName:
+      user.first_name,
+
+    lastName:
+      user.last_name,
+
+    role:
+      user.role,
+
+    status:
+      user.status,
   };
 }
 
-function normalizeTelegramUser(user) {
+function normalizeTelegramUser(
+  user
+) {
   return {
     id: user.id,
+
     username:
       user.username || null,
+
     first_name:
       user.first_name || null,
+
     last_name:
       user.last_name || null,
   };
 }
 
+function imageUrlForCat(cat) {
+  if (
+    !cat ||
+    !cat.id ||
+    !cat.image_key
+  ) {
+    return null;
+  }
+
+  return `/api/cat-image/${cat.id}/${cat.image_key}`;
+}
+
 /* =========================================================
-   DATABASE INITIALIZATION
+   DATABASE
    ========================================================= */
 
 async function initDatabase() {
@@ -160,13 +197,18 @@ async function initDatabase() {
     CREATE TABLE IF NOT EXISTS users (
       id BIGSERIAL PRIMARY KEY,
 
-      telegram_user_id TEXT UNIQUE NOT NULL,
+      telegram_user_id
+        TEXT UNIQUE NOT NULL,
 
       username TEXT,
+
       first_name TEXT,
+
       last_name TEXT,
 
-      role TEXT NOT NULL DEFAULT 'USER'
+      role TEXT
+        NOT NULL
+        DEFAULT 'USER'
         CHECK (
           role IN (
             'USER',
@@ -175,7 +217,9 @@ async function initDatabase() {
           )
         ),
 
-      status TEXT NOT NULL DEFAULT 'ACTIVE'
+      status TEXT
+        NOT NULL
+        DEFAULT 'ACTIVE'
         CHECK (
           status IN (
             'ACTIVE',
@@ -183,36 +227,40 @@ async function initDatabase() {
           )
         ),
 
-      referred_by BIGINT
-        REFERENCES users(id),
-
-      unlimited_until TIMESTAMPTZ,
+      unlimited_until
+        TIMESTAMPTZ,
 
       referral_reward_granted_at
         TIMESTAMPTZ,
 
-      created_at TIMESTAMPTZ
-        NOT NULL DEFAULT NOW(),
+      created_at
+        TIMESTAMPTZ
+        NOT NULL
+        DEFAULT NOW(),
 
-      updated_at TIMESTAMPTZ
-        NOT NULL DEFAULT NOW()
+      updated_at
+        TIMESTAMPTZ
+        NOT NULL
+        DEFAULT NOW()
     );
-
-    ALTER TABLE users
-      ADD COLUMN IF NOT EXISTS
-      referral_reward_granted_at
-      TIMESTAMPTZ;
 
     CREATE TABLE IF NOT EXISTS cats (
       id BIGSERIAL PRIMARY KEY,
 
-      owner_id BIGINT
+      owner_id
+        BIGINT
         NOT NULL
         REFERENCES users(id),
 
       name TEXT NOT NULL,
 
-      image_url TEXT NOT NULL,
+      image_url TEXT,
+
+      image_key TEXT,
+
+      image_mime TEXT,
+
+      image_data BYTEA,
 
       status TEXT
         NOT NULL
@@ -226,124 +274,169 @@ async function initDatabase() {
           )
         ),
 
-      rating DOUBLE PRECISION
+      rating
+        DOUBLE PRECISION
         NOT NULL
         DEFAULT 1000,
 
-      battles INTEGER
+      battles
+        INTEGER
         NOT NULL
         DEFAULT 0,
 
-      wins INTEGER
+      wins
+        INTEGER
         NOT NULL
         DEFAULT 0,
 
-      losses INTEGER
+      losses
+        INTEGER
         NOT NULL
         DEFAULT 0,
 
-      calibration_battles INTEGER
+      calibration_battles
+        INTEGER
         NOT NULL
         DEFAULT 0,
 
-      approved_at TIMESTAMPTZ,
+      approved_at
+        TIMESTAMPTZ,
 
-      created_at TIMESTAMPTZ
-        NOT NULL DEFAULT NOW(),
+      created_at
+        TIMESTAMPTZ
+        NOT NULL
+        DEFAULT NOW(),
 
-      updated_at TIMESTAMPTZ
-        NOT NULL DEFAULT NOW()
+      updated_at
+        TIMESTAMPTZ
+        NOT NULL
+        DEFAULT NOW()
     );
+
+    ALTER TABLE cats
+      ADD COLUMN IF NOT EXISTS
+        image_key TEXT;
+
+    ALTER TABLE cats
+      ADD COLUMN IF NOT EXISTS
+        image_mime TEXT;
+
+    ALTER TABLE cats
+      ADD COLUMN IF NOT EXISTS
+        image_data BYTEA;
 
     CREATE TABLE IF NOT EXISTS votes (
       id BIGSERIAL PRIMARY KEY,
 
-      user_id BIGINT
+      user_id
+        BIGINT
         NOT NULL
         REFERENCES users(id),
 
-      cat_a_id BIGINT
+      cat_a_id
+        BIGINT
         NOT NULL
         REFERENCES cats(id),
 
-      cat_b_id BIGINT
+      cat_b_id
+        BIGINT
         NOT NULL
         REFERENCES cats(id),
 
-      winner_id BIGINT
+      winner_id
+        BIGINT
         NOT NULL
         REFERENCES cats(id),
 
-      loser_id BIGINT
+      loser_id
+        BIGINT
         NOT NULL
         REFERENCES cats(id),
 
-      created_at TIMESTAMPTZ
-        NOT NULL DEFAULT NOW()
+      created_at
+        TIMESTAMPTZ
+        NOT NULL
+        DEFAULT NOW()
     );
 
     CREATE TABLE IF NOT EXISTS share_rewards (
       id BIGSERIAL PRIMARY KEY,
 
-      user_id BIGINT
+      user_id
+        BIGINT
         NOT NULL
         REFERENCES users(id),
 
-      created_at TIMESTAMPTZ
-        NOT NULL DEFAULT NOW()
+      created_at
+        TIMESTAMPTZ
+        NOT NULL
+        DEFAULT NOW()
     );
 
     CREATE TABLE IF NOT EXISTS referrals (
       id BIGSERIAL PRIMARY KEY,
 
-      inviter_id BIGINT
+      inviter_id
+        BIGINT
         NOT NULL
         REFERENCES users(id),
 
-      invited_id BIGINT
+      invited_id
+        BIGINT
         UNIQUE
         NOT NULL
         REFERENCES users(id),
 
-      confirmed BOOLEAN
+      confirmed
+        BOOLEAN
         NOT NULL
         DEFAULT FALSE,
 
-      confirmed_at TIMESTAMPTZ,
+      confirmed_at
+        TIMESTAMPTZ,
 
-      created_at TIMESTAMPTZ
-        NOT NULL DEFAULT NOW()
+      created_at
+        TIMESTAMPTZ
+        NOT NULL
+        DEFAULT NOW()
     );
 
     CREATE TABLE IF NOT EXISTS moderation_actions (
       id BIGSERIAL PRIMARY KEY,
 
-      moderator_id BIGINT
+      moderator_id
+        BIGINT
         NOT NULL
         REFERENCES users(id),
 
-      target_user_id BIGINT
+      target_user_id
+        BIGINT
         REFERENCES users(id),
 
-      cat_id BIGINT
+      cat_id
+        BIGINT
         REFERENCES cats(id),
 
       action TEXT NOT NULL,
 
       reason TEXT,
 
-      created_at TIMESTAMPTZ
-        NOT NULL DEFAULT NOW()
+      created_at
+        TIMESTAMPTZ
+        NOT NULL
+        DEFAULT NOW()
     );
 
     CREATE TABLE IF NOT EXISTS reports (
       id BIGSERIAL PRIMARY KEY,
 
-      reporter_id BIGINT
+      reporter_id
+        BIGINT
         NOT NULL
         REFERENCES users(id),
 
-      cat_id BIGINT
+      cat_id
+        BIGINT
         NOT NULL
         REFERENCES cats(id),
 
@@ -360,8 +453,10 @@ async function initDatabase() {
           )
         ),
 
-      created_at TIMESTAMPTZ
-        NOT NULL DEFAULT NOW()
+      created_at
+        TIMESTAMPTZ
+        NOT NULL
+        DEFAULT NOW()
     );
 
     CREATE INDEX IF NOT EXISTS
@@ -385,7 +480,7 @@ async function initDatabase() {
       ON referrals(inviter_id);
 
     CREATE INDEX IF NOT EXISTS
-      idx_share_rewards_user_created
+      idx_share_rewards_user
       ON share_rewards(
         user_id,
         created_at DESC
@@ -398,7 +493,7 @@ async function initDatabase() {
 }
 
 /* =========================================================
-   TELEGRAM MINI APP AUTH
+   TELEGRAM INIT DATA
    ========================================================= */
 
 function validateTelegramInitData(
@@ -406,7 +501,7 @@ function validateTelegramInitData(
 ) {
   if (
     !initData ||
-    !TELEGRAM_BOT_TOKEN
+    !BOT_TOKEN
   ) {
     return null;
   }
@@ -428,8 +523,9 @@ function validateTelegramInitData(
 
     const dataCheckString =
       [...params.entries()]
-        .sort(([a], [b]) =>
-          a.localeCompare(b)
+        .sort(
+          ([a], [b]) =>
+            a.localeCompare(b)
         )
         .map(
           ([key, value]) =>
@@ -444,7 +540,7 @@ function validateTelegramInitData(
           "WebAppData"
         )
         .update(
-          TELEGRAM_BOT_TOKEN
+          BOT_TOKEN
         )
         .digest();
 
@@ -459,29 +555,28 @@ function validateTelegramInitData(
         )
         .digest("hex");
 
-    const calculatedBuffer =
+    const a =
       Buffer.from(
         calculatedHash,
         "hex"
       );
 
-    const receivedBuffer =
+    const b =
       Buffer.from(
         receivedHash,
         "hex"
       );
 
     if (
-      calculatedBuffer.length !==
-      receivedBuffer.length
+      a.length !== b.length
     ) {
       return null;
     }
 
     if (
       !crypto.timingSafeEqual(
-        calculatedBuffer,
-        receivedBuffer
+        a,
+        b
       )
     ) {
       return null;
@@ -489,17 +584,15 @@ function validateTelegramInitData(
 
     const authDate =
       Number(
-        params.get("auth_date")
+        params.get(
+          "auth_date"
+        )
       );
 
     if (!authDate) {
       return null;
     }
 
-    /*
-      Не принимаем очень старые
-      initData.
-    */
     if (
       Math.abs(
         Date.now() / 1000 -
@@ -517,11 +610,12 @@ function validateTelegramInitData(
       return null;
     }
 
-    const user =
-      JSON.parse(rawUser);
-
     return {
-      user,
+      user:
+        JSON.parse(
+          rawUser
+        ),
+
       startParam:
         params.get(
           "start_param"
@@ -559,7 +653,7 @@ async function getOrCreateUser(
     telegramId ===
       OWNER_TELEGRAM_ID;
 
-  let result =
+  const existing =
     await pool.query(
       `
       SELECT *
@@ -570,15 +664,10 @@ async function getOrCreateUser(
     );
 
   if (
-    result.rows.length
+    existing.rows.length
   ) {
-    const existing =
-      result.rows[0];
-
-    const role =
-      shouldBeOwner
-        ? "OWNER"
-        : existing.role;
+    const current =
+      existing.rows[0];
 
     const updated =
       await pool.query(
@@ -588,27 +677,34 @@ async function getOrCreateUser(
           username = $2,
           first_name = $3,
           last_name = $4,
+
           role = $5,
-          updated_at = NOW()
-        WHERE telegram_user_id = $1
+
+          updated_at =
+            NOW()
+
+        WHERE telegram_user_id =
+          $1
+
         RETURNING *
         `,
         [
           telegramId,
+
           normalized.username,
+
           normalized.first_name,
+
           normalized.last_name,
-          role,
+
+          shouldBeOwner
+            ? "OWNER"
+            : current.role,
         ]
       );
 
     return updated.rows[0];
   }
-
-  const role =
-    shouldBeOwner
-      ? "OWNER"
-      : "USER";
 
   const created =
     await pool.query(
@@ -620,6 +716,7 @@ async function getOrCreateUser(
         last_name,
         role
       )
+
       VALUES (
         $1,
         $2,
@@ -627,14 +724,21 @@ async function getOrCreateUser(
         $4,
         $5
       )
+
       RETURNING *
       `,
       [
         telegramId,
+
         normalized.username,
+
         normalized.first_name,
+
         normalized.last_name,
-        role,
+
+        shouldBeOwner
+          ? "OWNER"
+          : "USER",
       ]
     );
 
@@ -706,10 +810,13 @@ async function registerReferralIfNeeded(
       `
       SELECT id
       FROM users
-      WHERE telegram_user_id = $1
+      WHERE telegram_user_id =
+        $1
       LIMIT 1
       `,
-      [inviterTelegramId]
+      [
+        inviterTelegramId,
+      ]
     );
 
   if (
@@ -724,7 +831,12 @@ async function registerReferralIfNeeded(
       inviter_id,
       invited_id
     )
-    VALUES ($1,$2)
+
+    VALUES (
+      $1,
+      $2
+    )
+
     ON CONFLICT (
       invited_id
     )
@@ -741,21 +853,27 @@ async function grantReferralRewardIfNeeded(
   client,
   inviterId
 ) {
-  const countResult =
+  const result =
     await client.query(
       `
       SELECT
-        COUNT(*)::int AS count
+        COUNT(*)::int
+          AS count
+
       FROM referrals
-      WHERE inviter_id = $1
-        AND confirmed = TRUE
+
+      WHERE inviter_id =
+        $1
+
+        AND confirmed =
+          TRUE
       `,
       [inviterId]
     );
 
   const count =
     Number(
-      countResult.rows[0].count
+      result.rows[0].count
     );
 
   if (
@@ -765,13 +883,10 @@ async function grantReferralRewardIfNeeded(
     return;
   }
 
-  /*
-    Награда за 10 друзей —
-    один раз.
-  */
   await client.query(
     `
     UPDATE users
+
     SET
       unlimited_until =
         GREATEST(
@@ -779,6 +894,7 @@ async function grantReferralRewardIfNeeded(
             unlimited_until,
             NOW()
           ),
+
           NOW() +
             INTERVAL '7 days'
         ),
@@ -790,6 +906,7 @@ async function grantReferralRewardIfNeeded(
         NOW()
 
     WHERE id = $1
+
       AND
         referral_reward_granted_at
         IS NULL
@@ -799,7 +916,7 @@ async function grantReferralRewardIfNeeded(
 }
 
 /* =========================================================
-   AUTH MIDDLEWARE
+   AUTH
    ========================================================= */
 
 async function auth(
@@ -808,8 +925,11 @@ async function auth(
   next
 ) {
   try {
-    let telegramUser = null;
-    let startParam = null;
+    let telegramUser =
+      null;
+
+    let startParam =
+      null;
 
     const initData =
       req.headers[
@@ -831,11 +951,6 @@ async function auth(
       }
     }
 
-    /*
-      Development mode.
-      На production можно вообще
-      не задавать DEV_MODE.
-    */
     if (
       !telegramUser &&
       process.env.DEV_MODE ===
@@ -890,8 +1005,6 @@ async function auth(
     }
 
     req.user = user;
-    req.telegramStartParam =
-      startParam;
 
     next();
   } catch (error) {
@@ -942,9 +1055,7 @@ async function telegramApi(
   method,
   payload = {}
 ) {
-  if (
-    !TELEGRAM_BOT_TOKEN
-  ) {
+  if (!BOT_TOKEN) {
     throw new Error(
       "BOT_TOKEN_NOT_SET"
     );
@@ -952,7 +1063,7 @@ async function telegramApi(
 
   const response =
     await fetch(
-      `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/${method}`,
+      `https://api.telegram.org/bot${BOT_TOKEN}/${method}`,
       {
         method: "POST",
 
@@ -972,18 +1083,10 @@ async function telegramApi(
     await response.json();
 
   if (!data.ok) {
-    const error =
-      new Error(
-        `Telegram ${method}: ${
-          data.description ||
-          "unknown error"
-        }`
-      );
-
-    error.telegramData =
-      data;
-
-    throw error;
+    throw new Error(
+      data.description ||
+      `Telegram ${method} error`
+    );
   }
 
   return data.result;
@@ -995,7 +1098,7 @@ async function sendTelegramMessage(
   extra = {}
 ) {
   if (
-    !TELEGRAM_BOT_TOKEN ||
+    !BOT_TOKEN ||
     !chatId
   ) {
     return false;
@@ -1005,8 +1108,11 @@ async function sendTelegramMessage(
     await telegramApi(
       "sendMessage",
       {
-        chat_id: chatId,
+        chat_id:
+          chatId,
+
         text,
+
         ...extra,
       }
     );
@@ -1024,14 +1130,17 @@ async function sendTelegramMessage(
 
 async function notifyUserByInternalId(
   userId,
-  message
+  text
 ) {
   try {
     const result =
       await pool.query(
         `
-        SELECT telegram_user_id
+        SELECT
+          telegram_user_id
+
         FROM users
+
         WHERE id = $1
         LIMIT 1
         `,
@@ -1047,7 +1156,8 @@ async function notifyUserByInternalId(
     await sendTelegramMessage(
       result.rows[0]
         .telegram_user_id,
-      message
+
+      text
     );
   } catch (error) {
     console.error(
@@ -1058,7 +1168,7 @@ async function notifyUserByInternalId(
 }
 
 /* =========================================================
-   TELEGRAM /START
+   BOT COMMANDS
    ========================================================= */
 
 async function handleTelegramStart(
@@ -1108,7 +1218,7 @@ async function handleTelegramStart(
 
 У тебя есть 5 голосов каждые 5 часов.
 
-Загрузишь своего кота после запуска приложения — после одобрения модератором лимит станет 10 голосов каждые 5 часов.
+Загрузишь своего кота — после одобрения модератором лимит станет 10 голосов каждые 5 часов.
 
 Выбирай внимательно. Коты всё запомнят.`;
 
@@ -1122,8 +1232,10 @@ async function handleTelegramStart(
             {
               text:
                 "⚔️ Открыть КОТОБОР",
+
               web_app: {
-                url: APP_URL,
+                url:
+                  APP_URL,
               },
             },
           ],
@@ -1179,7 +1291,9 @@ async function handleTelegramUpdate(
   ) {
     await sendTelegramMessage(
       message.chat.id,
+
       "Нажми «Открыть КОТОБОР» и выбирай лучшего кота. 🐈⚔️",
+
       {
         reply_markup: {
           inline_keyboard: [
@@ -1187,6 +1301,7 @@ async function handleTelegramUpdate(
               {
                 text:
                   "⚔️ Открыть КОТОБОР",
+
                 web_app: {
                   url:
                     APP_URL,
@@ -1208,9 +1323,7 @@ let telegramPollingActive =
   false;
 
 async function startTelegramBot() {
-  if (
-    !TELEGRAM_BOT_TOKEN
-  ) {
+  if (!BOT_TOKEN) {
     console.log(
       "Telegram bot disabled: BOT_TOKEN is not set"
     );
@@ -1228,10 +1341,6 @@ async function startTelegramBot() {
     true;
 
   try {
-    /*
-      Long polling и webhook
-      одновременно использовать нельзя.
-    */
     await telegramApi(
       "deleteWebhook",
       {
@@ -1245,12 +1354,17 @@ async function startTelegramBot() {
       {
         commands: [
           {
-            command: "start",
+            command:
+              "start",
+
             description:
               "Открыть КОТОБОР",
           },
+
           {
-            command: "help",
+            command:
+              "help",
+
             description:
               "Помощь",
           },
@@ -1284,6 +1398,7 @@ async function startTelegramBot() {
           "getUpdates",
           {
             offset,
+
             timeout: 25,
 
             allowed_updates: [
@@ -1293,8 +1408,7 @@ async function startTelegramBot() {
         );
 
       for (
-        const update
-        of updates
+        const update of updates
       ) {
         offset =
           update.update_id + 1;
@@ -1316,18 +1430,13 @@ async function startTelegramBot() {
         error.message
       );
 
-      /*
-        При коротком перекрытии
-        Railway deployments Telegram
-        может временно вернуть conflict.
-      */
       await sleep(3000);
     }
   }
 }
 
 /* =========================================================
-   CAT STATE
+   VOTE LIMIT
    ========================================================= */
 
 async function hasApprovedCat(
@@ -1338,22 +1447,25 @@ async function hasApprovedCat(
     await db.query(
       `
       SELECT 1
+
       FROM cats
-      WHERE owner_id = $1
-        AND status = 'APPROVED'
+
+      WHERE owner_id =
+        $1
+
+        AND status =
+          'APPROVED'
+
       LIMIT 1
       `,
       [userId]
     );
 
   return (
-    result.rows.length > 0
+    result.rows.length >
+    0
   );
 }
-
-/* =========================================================
-   TRUE ROLLING 5-HOUR VOTE LIMIT
-   ========================================================= */
 
 async function getVoteState(
   user,
@@ -1366,18 +1478,13 @@ async function getVoteState(
     user.unlimited_until &&
     new Date(
       user.unlimited_until
-    ) > currentTime
+    ) >
+      currentTime
   ) {
     return {
       unlimited: true,
 
       remaining: null,
-
-      baseLimit: null,
-
-      bonusVotes: null,
-
-      used: null,
 
       resetsAt: null,
 
@@ -1397,19 +1504,21 @@ async function getVoteState(
       ? CAT_LIMIT
       : BASE_LIMIT;
 
-  /*
-    Все реальные голоса
-    за последние 5 часов.
-  */
   const voteResult =
     await db.query(
       `
       SELECT
-        COUNT(*)::int AS count,
+        COUNT(*)::int
+          AS count,
+
         MIN(created_at)
           AS oldest_vote
+
       FROM votes
-      WHERE user_id = $1
+
+      WHERE user_id =
+        $1
+
         AND created_at >
           NOW() -
           INTERVAL '5 hours'
@@ -1419,56 +1528,52 @@ async function getVoteState(
 
   const used =
     Number(
-      voteResult.rows[0].count
+      voteResult.rows[0]
+        .count
     );
 
-  /*
-    Бонус за шаринг действует,
-    если награда была получена
-    в последние 5 часов.
-  */
   const shareResult =
     await db.query(
       `
       SELECT created_at
+
       FROM share_rewards
-      WHERE user_id = $1
+
+      WHERE user_id =
+        $1
+
         AND created_at >
           NOW() -
           INTERVAL '5 hours'
-      ORDER BY created_at DESC
+
+      ORDER BY
+        created_at DESC
+
       LIMIT 1
       `,
       [user.id]
     );
 
   const hasShareBonus =
-    shareResult.rows.length > 0;
+    shareResult.rows.length >
+    0;
 
   const bonusVotes =
     hasShareBonus
       ? SHARE_BONUS
       : 0;
 
-  const totalAvailable =
-    baseLimit +
-    bonusVotes;
-
   const remaining =
     Math.max(
       0,
-      totalAvailable -
+
+      baseLimit +
+        bonusVotes -
         used
     );
 
   let resetsAt = null;
 
-  /*
-    В скользящем окне новый
-    голос становится доступен,
-    когда самый старый голос
-    выйдет из последних 5 часов.
-  */
   if (
     remaining <= 0 &&
     voteResult.rows[0]
@@ -1499,17 +1604,6 @@ async function getVoteState(
 
     shareBonusActive:
       hasShareBonus,
-
-    shareBonusAvailableAt:
-      hasShareBonus
-        ? new Date(
-            new Date(
-              shareResult.rows[0]
-                .created_at
-            ).getTime() +
-              FIVE_HOURS_MS
-          )
-        : null,
   };
 }
 
@@ -1527,8 +1621,10 @@ function expectedScore(
       1 +
       Math.pow(
         10,
-        (ratingB -
-          ratingA) /
+        (
+          ratingB -
+          ratingA
+        ) /
           400
       )
     )
@@ -1564,6 +1660,7 @@ function calculateElo(
       Number(
         winner.rating
       ),
+
       Number(
         loser.rating
       )
@@ -1574,37 +1671,32 @@ function calculateElo(
       Number(
         loser.rating
       ),
+
       Number(
         winner.rating
       )
     );
 
-  const winnerNew =
-    Number(
-      winner.rating
-    ) +
-    kFactor(winner) *
-      (
-        1 -
-        expectedWinner
-      );
-
-  const loserNew =
-    Number(
-      loser.rating
-    ) +
-    kFactor(loser) *
-      (
-        0 -
-        expectedLoser
-      );
-
   return {
     winnerRating:
-      winnerNew,
+      Number(
+        winner.rating
+      ) +
+      kFactor(winner) *
+        (
+          1 -
+          expectedWinner
+        ),
 
     loserRating:
-      loserNew,
+      Number(
+        loser.rating
+      ) +
+      kFactor(loser) *
+        (
+          0 -
+          expectedLoser
+        ),
   };
 }
 
@@ -1615,20 +1707,45 @@ function calculateElo(
 app.get(
   "/api/me",
   auth,
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     try {
       const catResult =
         await pool.query(
           `
           SELECT *
           FROM cats
-          WHERE owner_id = $1
+
+          WHERE owner_id =
+            $1
+
           ORDER BY
             created_at DESC
+
           LIMIT 1
           `,
           [req.user.id]
         );
+
+      let cat =
+        catResult.rows[0] ||
+        null;
+
+      if (cat) {
+        cat = {
+          ...cat,
+
+          image_url:
+            imageUrlForCat(
+              cat
+            ),
+        };
+
+        delete cat.image_data;
+        delete cat.image_key;
+      }
 
       const voteState =
         await getVoteState(
@@ -1641,9 +1758,14 @@ app.get(
           SELECT
             COUNT(*)::int
               AS count
+
           FROM referrals
-          WHERE inviter_id = $1
-            AND confirmed = TRUE
+
+          WHERE inviter_id =
+            $1
+
+            AND confirmed =
+              TRUE
           `,
           [req.user.id]
         );
@@ -1654,9 +1776,7 @@ app.get(
             req.user
           ),
 
-        cat:
-          catResult.rows[0] ||
-          null,
+        cat,
 
         votes:
           voteState,
@@ -1690,13 +1810,16 @@ app.get(
 );
 
 /* =========================================================
-   SHARE BONUS
+   SHARE
    ========================================================= */
 
 app.post(
   "/api/share-reward",
   auth,
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     const client =
       await pool.connect();
 
@@ -1705,16 +1828,13 @@ app.post(
         "BEGIN"
       );
 
-      /*
-        Блокируем пользователя,
-        чтобы двойной быстрый tap
-        не дал два бонуса.
-      */
       await client.query(
         `
         SELECT id
         FROM users
+
         WHERE id = $1
+
         FOR UPDATE
         `,
         [req.user.id]
@@ -1724,10 +1844,15 @@ app.post(
         await client.query(
           `
           SELECT created_at
+
           FROM share_rewards
-          WHERE user_id = $1
+
+          WHERE user_id =
+            $1
+
           ORDER BY
             created_at DESC
+
           LIMIT 1
           `,
           [req.user.id]
@@ -1772,6 +1897,7 @@ app.post(
           share_rewards (
             user_id
           )
+
         VALUES ($1)
         `,
         [req.user.id]
@@ -1781,16 +1907,16 @@ app.post(
         "COMMIT"
       );
 
-      const votes =
-        await getVoteState(
-          req.user
-        );
-
       res.json({
         success: true,
+
         bonus:
           SHARE_BONUS,
-        votes,
+
+        votes:
+          await getVoteState(
+            req.user
+          ),
       });
     } catch (error) {
       await client
@@ -1817,10 +1943,13 @@ app.post(
 );
 
 /* =========================================================
-   PAIR GENERATION
+   BATTLE PAIRS
    ========================================================= */
 
-function pairKey(a, b) {
+function pairKey(
+  a,
+  b
+) {
   const x =
     Number(a);
 
@@ -1832,7 +1961,9 @@ function pairKey(a, b) {
     : `${y}:${x}`;
 }
 
-function randomItem(array) {
+function randomItem(
+  array
+) {
   if (
     !array.length
   ) {
@@ -1854,11 +1985,14 @@ async function selectBattlePair(
     await pool.query(
       `
       SELECT *
+
       FROM cats
+
       WHERE status =
         'APPROVED'
 
-        AND owner_id <> $1
+        AND owner_id <>
+          $1
 
       ORDER BY
         random()
@@ -1872,26 +2006,30 @@ async function selectBattlePair(
     candidatesResult.rows;
 
   if (
-    candidates.length < 2
+    candidates.length <
+    2
   ) {
     return null;
   }
 
-  const previousPairsResult =
+  const previousResult =
     await pool.query(
       `
       SELECT
         cat_a_id,
         cat_b_id
+
       FROM votes
-      WHERE user_id = $1
+
+      WHERE user_id =
+        $1
       `,
       [userId]
     );
 
   const previousPairs =
     new Set(
-      previousPairsResult.rows.map(
+      previousResult.rows.map(
         (row) =>
           pairKey(
             row.cat_a_id,
@@ -1900,7 +2038,7 @@ async function selectBattlePair(
       )
     );
 
-  function isAllowedPair(
+  function allowed(
     a,
     b
   ) {
@@ -1921,11 +2059,6 @@ async function selectBattlePair(
     );
   }
 
-  /*
-    Пытаемся сформировать
-    пару по нужному режиму
-    до 100 раз.
-  */
   for (
     let attempt = 0;
     attempt < 100;
@@ -1937,14 +2070,10 @@ async function selectBattlePair(
     let first = null;
     let second = null;
 
-    /*
-      ~30%:
-      новый / мало оценённый кот.
-    */
     if (
       mode < 0.30
     ) {
-      const calibration =
+      const newCats =
         candidates.filter(
           (cat) =>
             Number(
@@ -1954,60 +2083,51 @@ async function selectBattlePair(
 
       first =
         randomItem(
-          calibration
+          newCats
         ) ||
         randomItem(
           candidates
         );
 
       const others =
-        candidates.filter(
-          (cat) =>
-            String(
-              cat.id
-            ) !==
-            String(
-              first.id
-            )
-        );
-
-      /*
-        Оппонент желательно
-        близкий по рейтингу.
-      */
-      others.sort(
-        (a, b) =>
-          Math.abs(
-            Number(a.rating) -
-              Number(
-                first.rating
-              )
-          ) -
-          Math.abs(
-            Number(b.rating) -
-              Number(
-                first.rating
+        candidates
+          .filter(
+            (cat) =>
+              String(
+                cat.id
+              ) !==
+              String(
+                first.id
               )
           )
-      );
+          .sort(
+            (a, b) =>
+              Math.abs(
+                Number(
+                  a.rating
+                ) -
+                  Number(
+                    first.rating
+                  )
+              ) -
+              Math.abs(
+                Number(
+                  b.rating
+                ) -
+                  Number(
+                    first.rating
+                  )
+              )
+          );
 
       second =
         randomItem(
           others.slice(
             0,
-            Math.min(
-              10,
-              others.length
-            )
+            10
           )
         );
-    }
-
-    /*
-      ~50%:
-      близкий рейтинг.
-    */
-    else if (
+    } else if (
       mode < 0.80
     ) {
       first =
@@ -2050,19 +2170,10 @@ async function selectBattlePair(
         randomItem(
           others.slice(
             0,
-            Math.min(
-              12,
-              others.length
-            )
+            12
           )
         );
-    }
-
-    /*
-      ~20%:
-      контрольная случайная пара.
-    */
-    else {
+    } else {
       first =
         randomItem(
           candidates
@@ -2083,7 +2194,7 @@ async function selectBattlePair(
     }
 
     if (
-      isAllowedPair(
+      allowed(
         first,
         second
       )
@@ -2095,11 +2206,6 @@ async function selectBattlePair(
     }
   }
 
-  /*
-    Fallback:
-    ищем любую ещё
-    не голосованную пару.
-  */
   for (
     let i = 0;
     i <
@@ -2113,7 +2219,7 @@ async function selectBattlePair(
       j++
     ) {
       if (
-        isAllowedPair(
+        allowed(
           candidates[i],
           candidates[j]
         )
@@ -2136,7 +2242,10 @@ async function selectBattlePair(
 app.get(
   "/api/battle",
   auth,
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     try {
       const voteState =
         await getVoteState(
@@ -2145,7 +2254,8 @@ app.get(
 
       if (
         !voteState.unlimited &&
-        voteState.remaining <= 0
+        voteState.remaining <=
+          0
       ) {
         return res
           .status(429)
@@ -2173,14 +2283,21 @@ app.get(
       }
 
       res.json({
-        cats: pair.map(
-          (cat) => ({
-            id: cat.id,
-            name: cat.name,
-            imageUrl:
-              cat.image_url,
-          })
-        ),
+        cats:
+          pair.map(
+            (cat) => ({
+              id:
+                cat.id,
+
+              name:
+                cat.name,
+
+              imageUrl:
+                imageUrlForCat(
+                  cat
+                ),
+            })
+          ),
 
         votes:
           voteState,
@@ -2208,7 +2325,10 @@ app.get(
 app.post(
   "/api/vote",
   auth,
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     const client =
       await pool.connect();
 
@@ -2244,52 +2364,32 @@ app.post(
         "BEGIN"
       );
 
-      /*
-        Блокируем голосование
-        одного пользователя,
-        чтобы лимит нельзя было
-        обойти параллельными taps.
-      */
-      await client.query(
-        `
-        SELECT
-          pg_advisory_xact_lock(
-            $1::integer
-          )
-        `,
-        [
-          Number(
-            req.user.id
-          ) %
-            2147483647,
-        ]
-      );
-
       const freshUserResult =
         await client.query(
           `
           SELECT *
           FROM users
-          WHERE id = $1
+
+          WHERE id =
+            $1
+
           FOR UPDATE
           `,
           [req.user.id]
         );
 
       const freshUser =
-        freshUserResult
-          .rows[0];
+        freshUserResult.rows[0];
 
-      const voteStateBefore =
+      const before =
         await getVoteState(
           freshUser,
           client
         );
 
       if (
-        !voteStateBefore.unlimited &&
-        voteStateBefore.remaining <=
-          0
+        !before.unlimited &&
+        before.remaining <= 0
       ) {
         await client.query(
           "ROLLBACK"
@@ -2302,7 +2402,7 @@ app.post(
               "VOTE_LIMIT",
 
             votes:
-              voteStateBefore,
+              before,
           });
       }
 
@@ -2310,7 +2410,9 @@ app.post(
         await client.query(
           `
           SELECT *
+
           FROM cats
+
           WHERE id =
             ANY(
               $1::bigint[]
@@ -2368,29 +2470,40 @@ app.post(
           });
       }
 
-      /*
-        Именно та же ПАРА,
-        а не любой встречавшийся кот.
-      */
-      const previousVote =
+      const previous =
         await client.query(
           `
           SELECT 1
+
           FROM votes
-          WHERE user_id = $1
+
+          WHERE user_id =
+            $1
+
             AND (
               (
-                cat_a_id = $2
+                cat_a_id =
+                  $2
+
                 AND
-                cat_b_id = $3
+
+                cat_b_id =
+                  $3
               )
+
               OR
+
               (
-                cat_a_id = $3
+                cat_a_id =
+                  $3
+
                 AND
-                cat_b_id = $2
+
+                cat_b_id =
+                  $2
               )
             )
+
           LIMIT 1
           `,
           [
@@ -2401,7 +2514,7 @@ app.post(
         );
 
       if (
-        previousVote.rows.length
+        previous.rows.length
       ) {
         await client.query(
           "ROLLBACK"
@@ -2452,6 +2565,7 @@ app.post(
           winner_id,
           loser_id
         )
+
         VALUES (
           $1,
           $2,
@@ -2472,8 +2586,10 @@ app.post(
       await client.query(
         `
         UPDATE cats
+
         SET
-          rating = $2,
+          rating =
+            $2,
 
           battles =
             battles + 1,
@@ -2483,15 +2599,16 @@ app.post(
 
           calibration_battles =
             LEAST(
-              calibration_battles
-                + 1,
+              calibration_battles +
+                1,
               20
             ),
 
           updated_at =
             NOW()
 
-        WHERE id = $1
+        WHERE id =
+          $1
         `,
         [
           winner.id,
@@ -2502,8 +2619,10 @@ app.post(
       await client.query(
         `
         UPDATE cats
+
         SET
-          rating = $2,
+          rating =
+            $2,
 
           battles =
             battles + 1,
@@ -2513,15 +2632,16 @@ app.post(
 
           calibration_battles =
             LEAST(
-              calibration_battles
-                + 1,
+              calibration_battles +
+                1,
               20
             ),
 
           updated_at =
             NOW()
 
-        WHERE id = $1
+        WHERE id =
+          $1
         `,
         [
           loser.id,
@@ -2529,22 +2649,26 @@ app.post(
         ]
       );
 
-      /*
-        Реферал считается
-        подтверждённым только
-        после первого настоящего
-        голосования.
-      */
       const referral =
         await client.query(
           `
           UPDATE referrals
+
           SET
-            confirmed = TRUE,
-            confirmed_at = NOW()
-          WHERE invited_id = $1
-            AND confirmed = FALSE
-          RETURNING inviter_id
+            confirmed =
+              TRUE,
+
+            confirmed_at =
+              NOW()
+
+          WHERE invited_id =
+            $1
+
+            AND confirmed =
+              FALSE
+
+          RETURNING
+            inviter_id
           `,
           [req.user.id]
         );
@@ -2569,23 +2693,23 @@ app.post(
           await pool.query(
             `
             SELECT *
+
             FROM users
-            WHERE id = $1
+
+            WHERE id =
+              $1
             `,
             [req.user.id]
           )
         ).rows[0];
 
-      const voteStateAfter =
-        await getVoteState(
-          refreshedUser
-        );
-
       res.json({
         success: true,
 
         votes:
-          voteStateAfter,
+          await getVoteState(
+            refreshedUser
+          ),
       });
     } catch (error) {
       await client
@@ -2612,26 +2736,58 @@ app.post(
 );
 
 /* =========================================================
-   CAT CREATE
-   Пока принимает imageUrl.
-   Реальную загрузку файла подключаем
-   следующим отдельным шагом.
+   IMAGE UPLOAD
    ========================================================= */
 
+function decodeImageDataUrl(
+  value
+) {
+  const text =
+    String(value || "");
+
+  const match =
+    text.match(
+      /^data:(image\/jpeg|image\/png|image\/webp);base64,([A-Za-z0-9+/=]+)$/
+    );
+
+  if (!match) {
+    return null;
+  }
+
+  const mime =
+    match[1];
+
+  const buffer =
+    Buffer.from(
+      match[2],
+      "base64"
+    );
+
+  if (
+    !buffer.length ||
+    buffer.length >
+      MAX_IMAGE_BYTES
+  ) {
+    return null;
+  }
+
+  return {
+    mime,
+    buffer,
+  };
+}
+
 app.post(
-  "/api/cats",
+  "/api/cats/upload",
   auth,
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     try {
       const name =
         String(
           req.body.name || ""
-        ).trim();
-
-      const imageUrl =
-        String(
-          req.body.imageUrl ||
-            ""
         ).trim();
 
       if (
@@ -2646,25 +2802,35 @@ app.post(
           });
       }
 
-      if (!imageUrl) {
+      const image =
+        decodeImageDataUrl(
+          req.body.imageData
+        );
+
+      if (!image) {
         return res
           .status(400)
           .json({
             error:
-              "IMAGE_REQUIRED",
+              "INVALID_IMAGE",
           });
       }
 
       const existing =
         await pool.query(
           `
-          SELECT 1
+          SELECT id
+
           FROM cats
-          WHERE owner_id = $1
+
+          WHERE owner_id =
+            $1
+
             AND status IN (
               'PENDING',
               'APPROVED'
             )
+
           LIMIT 1
           `,
           [req.user.id]
@@ -2681,39 +2847,74 @@ app.post(
           });
       }
 
+      const imageKey =
+        crypto
+          .randomBytes(24)
+          .toString("hex");
+
       const result =
         await pool.query(
           `
           INSERT INTO cats (
             owner_id,
             name,
-            image_url
+            image_key,
+            image_mime,
+            image_data,
+            status
           )
+
           VALUES (
             $1,
             $2,
-            $3
+            $3,
+            $4,
+            $5,
+            'PENDING'
           )
+
           RETURNING *
           `,
           [
             req.user.id,
+
             name,
-            imageUrl,
+
+            imageKey,
+
+            image.mime,
+
+            image.buffer,
           ]
         );
+
+      const cat =
+        result.rows[0];
 
       res
         .status(201)
         .json({
           success: true,
 
-          cat:
-            result.rows[0],
+          cat: {
+            id:
+              cat.id,
+
+            name:
+              cat.name,
+
+            status:
+              cat.status,
+
+            image_url:
+              imageUrlForCat(
+                cat
+              ),
+          },
         });
     } catch (error) {
       console.error(
-        "Cat create error:",
+        "Cat upload error:",
         error
       );
 
@@ -2721,8 +2922,85 @@ app.post(
         .status(500)
         .json({
           error:
-            "CAT_CREATE_ERROR",
+            "CAT_UPLOAD_ERROR",
         });
+    }
+  }
+);
+
+/* =========================================================
+   IMAGE SERVING
+   ========================================================= */
+
+app.get(
+  "/api/cat-image/:id/:key",
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const result =
+        await pool.query(
+          `
+          SELECT
+            image_mime,
+            image_data
+
+          FROM cats
+
+          WHERE id =
+            $1
+
+            AND image_key =
+              $2
+
+          LIMIT 1
+          `,
+          [
+            req.params.id,
+            req.params.key,
+          ]
+        );
+
+      if (
+        !result.rows.length
+      ) {
+        return res
+          .sendStatus(404);
+      }
+
+      const row =
+        result.rows[0];
+
+      if (
+        !row.image_data
+      ) {
+        return res
+          .sendStatus(404);
+      }
+
+      res.setHeader(
+        "Content-Type",
+        row.image_mime ||
+          "image/jpeg"
+      );
+
+      res.setHeader(
+        "Cache-Control",
+        "public, max-age=86400"
+      );
+
+      res.send(
+        row.image_data
+      );
+    } catch (error) {
+      console.error(
+        "Image error:",
+        error
+      );
+
+      res
+        .sendStatus(500);
     }
   }
 );
@@ -2734,7 +3012,10 @@ app.post(
 app.get(
   "/api/ranking",
   auth,
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     try {
       const top =
         await pool.query(
@@ -2743,7 +3024,7 @@ app.get(
             id,
             owner_id,
             name,
-            image_url,
+            image_key,
             rating,
             battles,
             wins,
@@ -2761,9 +3042,8 @@ app.get(
           WHERE status =
             'APPROVED'
 
-            AND
-              calibration_battles
-              >= 20
+            AND calibration_battles >=
+              20
 
           ORDER BY
             rating DESC
@@ -2776,7 +3056,34 @@ app.get(
         ranking:
           top.rows.map(
             (cat) => ({
-              ...cat,
+              id:
+                cat.id,
+
+              owner_id:
+                cat.owner_id,
+
+              name:
+                cat.name,
+
+              image_url:
+                imageUrlForCat(
+                  cat
+                ),
+
+              rating:
+                cat.rating,
+
+              battles:
+                cat.battles,
+
+              wins:
+                cat.wins,
+
+              losses:
+                cat.losses,
+
+              position:
+                cat.position,
 
               winRate:
                 Number(
@@ -2817,16 +3124,24 @@ app.get(
 app.get(
   "/api/my-cat-ranking",
   auth,
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     try {
       const catResult =
         await pool.query(
           `
           SELECT *
+
           FROM cats
-          WHERE owner_id = $1
+
+          WHERE owner_id =
+            $1
+
           ORDER BY
             created_at DESC
+
           LIMIT 1
           `,
           [req.user.id]
@@ -2837,6 +3152,7 @@ app.get(
       ) {
         return res.json({
           calibrated: false,
+
           reason:
             "NO_CAT",
         });
@@ -2849,8 +3165,7 @@ app.get(
         ownCat.status !==
           "APPROVED" ||
         Number(
-          ownCat
-            .calibration_battles
+          ownCat.calibration_battles
         ) < 20
       ) {
         return res.json({
@@ -2858,8 +3173,7 @@ app.get(
 
           calibrationBattles:
             Number(
-              ownCat
-                .calibration_battles
+              ownCat.calibration_battles
             ),
 
           target: 20,
@@ -2886,33 +3200,33 @@ app.get(
 
             FROM cats c
 
-            WHERE
-              c.status =
-                'APPROVED'
+            WHERE status =
+              'APPROVED'
 
               AND
-                c.calibration_battles
-                >= 20
+                calibration_battles >=
+                20
           )
 
           SELECT *
           FROM ranked
-          WHERE id = $1
+
+          WHERE id =
+            $1
+
           LIMIT 1
           `,
           [ownCat.id]
         );
 
-      if (
-        !mine.rows.length
-      ) {
+      const cat =
+        mine.rows[0];
+
+      if (!cat) {
         return res.json({
           calibrated: false,
         });
       }
-
-      const cat =
-        mine.rows[0];
 
       const position =
         Number(
@@ -2932,7 +3246,7 @@ app.get(
               id,
               owner_id,
               name,
-              image_url,
+              image_key,
               rating,
               battles,
               wins,
@@ -2947,13 +3261,12 @@ app.get(
 
             FROM cats
 
-            WHERE
-              status =
-                'APPROVED'
+            WHERE status =
+              'APPROVED'
 
               AND
-                calibration_battles
-                >= 20
+                calibration_battles >=
+                20
           )
 
           SELECT *
@@ -2981,8 +3294,10 @@ app.get(
           ? 100
           : Math.max(
               0,
+
               Math.min(
                 100,
+
                 (
                   (
                     total -
@@ -3010,7 +3325,16 @@ app.get(
           ) / 10,
 
         around:
-          around.rows,
+          around.rows.map(
+            (row) => ({
+              ...row,
+
+              image_url:
+                imageUrlForCat(
+                  row
+                ),
+            })
+          ),
       });
     } catch (error) {
       console.error(
@@ -3035,7 +3359,10 @@ app.get(
 app.post(
   "/api/reports",
   auth,
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     try {
       const {
         catId,
@@ -3046,10 +3373,15 @@ app.post(
         await pool.query(
           `
           SELECT id
+
           FROM cats
-          WHERE id = $1
+
+          WHERE id =
+            $1
+
             AND status =
               'APPROVED'
+
           LIMIT 1
           `,
           [catId]
@@ -3074,16 +3406,20 @@ app.post(
             cat_id,
             reason
           )
+
           VALUES (
             $1,
             $2,
             $3
           )
+
           RETURNING *
           `,
           [
             req.user.id,
+
             catId,
+
             String(
               reason || ""
             ).slice(
@@ -3097,6 +3433,7 @@ app.post(
         .status(201)
         .json({
           success: true,
+
           report:
             result.rows[0],
         });
@@ -3117,7 +3454,7 @@ app.post(
 );
 
 /* =========================================================
-   MODERATION - PENDING
+   MODERATION QUEUE
    ========================================================= */
 
 app.get(
@@ -3127,13 +3464,21 @@ app.get(
     "MODERATOR",
     "OWNER"
   ),
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     try {
       const result =
         await pool.query(
           `
           SELECT
-            c.*,
+            c.id,
+            c.owner_id,
+            c.name,
+            c.image_key,
+            c.status,
+            c.created_at,
 
             u.telegram_user_id,
             u.username,
@@ -3156,7 +3501,16 @@ app.get(
 
       res.json({
         cats:
-          result.rows,
+          result.rows.map(
+            (cat) => ({
+              ...cat,
+
+              image_url:
+                imageUrlForCat(
+                  cat
+                ),
+            })
+          ),
       });
     } catch (error) {
       console.error(
@@ -3175,7 +3529,7 @@ app.get(
 );
 
 /* =========================================================
-   MODERATION - APPROVE
+   APPROVE
    ========================================================= */
 
 app.post(
@@ -3185,12 +3539,16 @@ app.post(
     "MODERATOR",
     "OWNER"
   ),
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     try {
       const result =
         await pool.query(
           `
           UPDATE cats
+
           SET
             status =
               'APPROVED',
@@ -3201,7 +3559,9 @@ app.post(
             updated_at =
               NOW()
 
-          WHERE id = $1
+          WHERE id =
+            $1
+
             AND status =
               'PENDING'
 
@@ -3233,6 +3593,7 @@ app.post(
             target_user_id,
             action
           )
+
         VALUES (
           $1,
           $2,
@@ -3249,11 +3610,12 @@ app.post(
 
       await notifyUserByInternalId(
         cat.owner_id,
+
         `✅ ${cat.name} прошёл модерацию!
 
 Теперь он участвует в КОТОБОРЕ.
 
-Ваш лимит также увеличен до 10 голосов каждые 5 часов. 🐈⚔️`
+Ваш лимит увеличен до 10 голосов каждые 5 часов. 🐈⚔️`
       );
 
       res.json({
@@ -3276,7 +3638,7 @@ app.post(
 );
 
 /* =========================================================
-   MODERATION - REJECT
+   REJECT
    ========================================================= */
 
 app.post(
@@ -3286,7 +3648,10 @@ app.post(
     "MODERATOR",
     "OWNER"
   ),
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     try {
       const reason =
         String(
@@ -3301,6 +3666,7 @@ app.post(
         await pool.query(
           `
           UPDATE cats
+
           SET
             status =
               'REJECTED',
@@ -3308,7 +3674,9 @@ app.post(
             updated_at =
               NOW()
 
-          WHERE id = $1
+          WHERE id =
+            $1
+
             AND status =
               'PENDING'
 
@@ -3341,6 +3709,7 @@ app.post(
             action,
             reason
           )
+
         VALUES (
           $1,
           $2,
@@ -3359,11 +3728,12 @@ app.post(
 
       await notifyUserByInternalId(
         cat.owner_id,
+
         `😿 Фото ${cat.name} не прошло модерацию.
 
 Причина: ${reason}
 
-Можно будет загрузить другое фото.`
+Можно загрузить другое фото.`
       );
 
       res.json({
@@ -3396,15 +3766,17 @@ app.post(
     "MODERATOR",
     "OWNER"
   ),
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     const client =
       await pool.connect();
 
     try {
       const reason =
         String(
-          req.body.reason ||
-            ""
+          req.body.reason || ""
         )
           .trim()
           .slice(
@@ -3445,8 +3817,12 @@ app.post(
         await client.query(
           `
           SELECT *
+
           FROM users
-          WHERE id = $1
+
+          WHERE id =
+            $1
+
           FOR UPDATE
           `,
           [req.params.id]
@@ -3467,10 +3843,6 @@ app.post(
           });
       }
 
-      /*
-        OWNER не может быть
-        заблокирован модератором.
-      */
       if (
         target.rows[0].role ===
         "OWNER"
@@ -3490,6 +3862,7 @@ app.post(
       await client.query(
         `
         UPDATE users
+
         SET
           status =
             'PERMANENT_BAN',
@@ -3497,7 +3870,8 @@ app.post(
           updated_at =
             NOW()
 
-        WHERE id = $1
+        WHERE id =
+          $1
         `,
         [req.params.id]
       );
@@ -3505,6 +3879,7 @@ app.post(
       await client.query(
         `
         UPDATE cats
+
         SET
           status =
             'HIDDEN',
@@ -3512,7 +3887,8 @@ app.post(
           updated_at =
             NOW()
 
-        WHERE owner_id = $1
+        WHERE owner_id =
+          $1
 
           AND status IN (
             'PENDING',
@@ -3531,6 +3907,7 @@ app.post(
             action,
             reason
           )
+
         VALUES (
           $1,
           $2,
@@ -3552,6 +3929,7 @@ app.post(
       await sendTelegramMessage(
         target.rows[0]
           .telegram_user_id,
+
         BAN_MESSAGE
       );
 
@@ -3586,84 +3964,17 @@ app.post(
 );
 
 /* =========================================================
-   ADMIN REPORTS
-   ========================================================= */
-
-app.get(
-  "/api/admin/reports",
-  auth,
-  requireRole(
-    "MODERATOR",
-    "OWNER"
-  ),
-  async (req, res) => {
-    try {
-      const reports =
-        await pool.query(
-          `
-          SELECT
-            r.*,
-
-            c.name
-              AS cat_name,
-
-            c.image_url,
-
-            u.telegram_user_id
-              AS reporter_telegram_id,
-
-            u.username
-              AS reporter_username
-
-          FROM reports r
-
-          JOIN cats c
-            ON c.id =
-              r.cat_id
-
-          JOIN users u
-            ON u.id =
-              r.reporter_id
-
-          WHERE r.status =
-            'OPEN'
-
-          ORDER BY
-            r.created_at ASC
-          `
-        );
-
-      res.json({
-        reports:
-          reports.rows,
-      });
-    } catch (error) {
-      console.error(
-        "Reports queue error:",
-        error
-      );
-
-      res
-        .status(500)
-        .json({
-          error:
-            "REPORTS_QUEUE_ERROR",
-        });
-    }
-  }
-);
-
-/* =========================================================
-   OWNER - USERS
+   OWNER USERS
    ========================================================= */
 
 app.get(
   "/api/owner/users",
   auth,
-  requireRole(
-    "OWNER"
-  ),
-  async (req, res) => {
+  requireRole("OWNER"),
+  async (
+    req,
+    res
+  ) => {
     try {
       const result =
         await pool.query(
@@ -3710,10 +4021,11 @@ app.get(
 app.post(
   "/api/owner/users/:id/role",
   auth,
-  requireRole(
-    "OWNER"
-  ),
-  async (req, res) => {
+  requireRole("OWNER"),
+  async (
+    req,
+    res
+  ) => {
     try {
       const role =
         req.body.role;
@@ -3736,12 +4048,17 @@ app.post(
         await pool.query(
           `
           UPDATE users
+
           SET
-            role = $2,
+            role =
+              $2,
+
             updated_at =
               NOW()
 
-          WHERE id = $1
+          WHERE id =
+            $1
+
             AND role <>
               'OWNER'
 
@@ -3755,26 +4072,16 @@ app.post(
           ]
         );
 
-      if (
-        !result.rows.length
-      ) {
-        return res
-          .status(404)
-          .json({
-            error:
-              "USER_NOT_FOUND_OR_OWNER",
-          });
-      }
-
       res.json({
         success: true,
 
         user:
-          result.rows[0],
+          result.rows[0] ||
+          null,
       });
     } catch (error) {
       console.error(
-        "Role update error:",
+        "Role error:",
         error
       );
 
@@ -3782,28 +4089,26 @@ app.post(
         .status(500)
         .json({
           error:
-            "ROLE_UPDATE_ERROR",
+            "ROLE_ERROR",
         });
     }
   }
 );
 
-/* =========================================================
-   OWNER - UNBAN
-   ========================================================= */
-
 app.post(
   "/api/owner/users/:id/unban",
   auth,
-  requireRole(
-    "OWNER"
-  ),
-  async (req, res) => {
+  requireRole("OWNER"),
+  async (
+    req,
+    res
+  ) => {
     try {
       const result =
         await pool.query(
           `
           UPDATE users
+
           SET
             status =
               'ACTIVE',
@@ -3811,9 +4116,8 @@ app.post(
             updated_at =
               NOW()
 
-          WHERE id = $1
-            AND role <>
-              'OWNER'
+          WHERE id =
+            $1
 
           RETURNING *
           `,
@@ -3839,6 +4143,7 @@ app.post(
             target_user_id,
             action
           )
+
         VALUES (
           $1,
           $2,
@@ -3854,7 +4159,8 @@ app.post(
       await sendTelegramMessage(
         result.rows[0]
           .telegram_user_id,
-        `✅ Блокировка в КОТОБОРЕ снята владельцем сервиса.`
+
+        "✅ Блокировка в КОТОБОРЕ снята владельцем сервиса."
       );
 
       res.json({
@@ -3877,79 +4183,15 @@ app.post(
 );
 
 /* =========================================================
-   OWNER - MODERATION LOG
-   ========================================================= */
-
-app.get(
-  "/api/owner/moderation-log",
-  auth,
-  requireRole(
-    "OWNER"
-  ),
-  async (req, res) => {
-    try {
-      const result =
-        await pool.query(
-          `
-          SELECT
-            m.*,
-
-            moderator.username
-              AS moderator_username,
-
-            target.username
-              AS target_username,
-
-            target.telegram_user_id
-              AS target_telegram_id
-
-          FROM
-            moderation_actions m
-
-          LEFT JOIN users
-            moderator
-            ON moderator.id =
-              m.moderator_id
-
-          LEFT JOIN users
-            target
-            ON target.id =
-              m.target_user_id
-
-          ORDER BY
-            m.created_at DESC
-
-          LIMIT 1000
-          `
-        );
-
-      res.json({
-        actions:
-          result.rows,
-      });
-    } catch (error) {
-      console.error(
-        "Moderation log error:",
-        error
-      );
-
-      res
-        .status(500)
-        .json({
-          error:
-            "MODERATION_LOG_ERROR",
-        });
-    }
-  }
-);
-
-/* =========================================================
    HEALTH
    ========================================================= */
 
 app.get(
   "/api/health",
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     try {
       await pool.query(
         "SELECT 1"
@@ -3965,11 +4207,14 @@ app.get(
 
         telegramBot:
           Boolean(
-            TELEGRAM_BOT_TOKEN
+            BOT_TOKEN
           ),
 
         appUrl:
           APP_URL,
+
+        botUsername:
+          BOT_USERNAME,
       });
     } catch (error) {
       res
@@ -3978,23 +4223,21 @@ app.get(
           ok: false,
 
           database: false,
-
-          telegramBot:
-            Boolean(
-              TELEGRAM_BOT_TOKEN
-            ),
         });
     }
   }
 );
 
 /* =========================================================
-   FRONTEND FALLBACK
+   FRONTEND
    ========================================================= */
 
 app.get(
   "*",
-  (req, res) => {
+  (
+    req,
+    res
+  ) => {
     res.sendFile(
       path.join(
         __dirname,
@@ -4013,20 +4256,13 @@ async function start() {
   try {
     await initDatabase();
 
-    /*
-      Если владелец уже присутствует
-      в базе — синхронизируем роль
-      сразу при старте.
-      Если ещё нет — роль OWNER
-      будет установлена автоматически
-      при первом входе.
-    */
     if (
       OWNER_TELEGRAM_ID
     ) {
       await pool.query(
         `
         UPDATE users
+
         SET
           role =
             'OWNER',
@@ -4051,12 +4287,6 @@ async function start() {
           `КОТОБОР запущен на порту ${PORT}`
         );
 
-        /*
-          Не await:
-          HTTP сервер должен
-          продолжать работать
-          независимо от Telegram.
-        */
         startTelegramBot()
           .catch(
             (error) => {
