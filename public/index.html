@@ -1,0 +1,2405 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
+
+  <title>КОТОБОР</title>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    :root {
+      --bg: #0b0c10;
+      --card: #15171d;
+      --card2: #1d2028;
+      --text: #ffffff;
+      --muted: #9499a5;
+      --accent: #ff5a36;
+      --accent2: #ffb02e;
+      --danger: #ff3b4f;
+      --success: #38d27a;
+      --line: rgba(255,255,255,.09);
+      --radius: 22px;
+      --shadow: 0 16px 50px rgba(0,0,0,.35);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    }
+
+    body {
+      padding:
+        env(safe-area-inset-top)
+        0
+        env(safe-area-inset-bottom);
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 520px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding-bottom: 92px;
+    }
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      padding: 14px 16px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background:
+        linear-gradient(
+          to bottom,
+          rgba(11,12,16,.98),
+          rgba(11,12,16,.86),
+          rgba(11,12,16,0)
+        );
+      backdrop-filter: blur(14px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-size: 23px;
+      background:
+        linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 10px 30px rgba(255,90,54,.25);
+    }
+
+    .brand-name {
+      font-size: 22px;
+      font-weight: 950;
+      letter-spacing: -.6px;
+    }
+
+    .brand-sub {
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 1px;
+    }
+
+    .votes-pill {
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: var(--card2);
+      border: 1px solid var(--line);
+      font-weight: 800;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .content {
+      padding: 6px 14px 30px;
+    }
+
+    .page {
+      display: none;
+      animation: pageIn .18s ease;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    @keyframes pageIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .section-title {
+      font-size: 25px;
+      font-weight: 950;
+      letter-spacing: -.7px;
+      margin: 10px 2px 14px;
+    }
+
+    .section-subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+      margin: -6px 2px 18px;
+    }
+
+    .card {
+      background:
+        linear-gradient(180deg, var(--card2), var(--card));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    /* BATTLE */
+
+    .battle-title {
+      text-align: center;
+      margin: 10px 0 14px;
+    }
+
+    .battle-title strong {
+      font-size: 27px;
+      display: block;
+      letter-spacing: -.8px;
+    }
+
+    .battle-title span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .battle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      position: relative;
+    }
+
+    .cat-card {
+      border: 0;
+      padding: 0;
+      overflow: hidden;
+      position: relative;
+      min-height: 390px;
+      background: #111;
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      color: white;
+      transition:
+        transform .12s ease,
+        filter .12s ease;
+    }
+
+    .cat-card:active {
+      transform: scale(.975);
+      filter: brightness(.9);
+    }
+
+    .cat-card img {
+      width: 100%;
+      height: 390px;
+      object-fit: cover;
+      display: block;
+      background: #222;
+    }
+
+    .cat-gradient {
+      position: absolute;
+      inset: auto 0 0;
+      height: 45%;
+      background:
+        linear-gradient(
+          to top,
+          rgba(0,0,0,.9),
+          rgba(0,0,0,.12),
+          transparent
+        );
+    }
+
+    .cat-name {
+      position: absolute;
+      left: 13px;
+      right: 13px;
+      bottom: 14px;
+      font-size: 20px;
+      font-weight: 950;
+      text-align: left;
+      text-shadow: 0 2px 10px rgba(0,0,0,.8);
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .vs {
+      position: absolute;
+      z-index: 5;
+      left: 50%;
+      top: 44%;
+      transform: translate(-50%, -50%);
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-weight: 950;
+      font-style: italic;
+      background: var(--accent);
+      border: 4px solid var(--bg);
+      box-shadow: 0 8px 30px rgba(0,0,0,.5);
+    }
+
+    .battle-help {
+      margin-top: 16px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .timer-box {
+      margin-top: 16px;
+      padding: 18px;
+      text-align: center;
+    }
+
+    .timer-box strong {
+      display: block;
+      font-size: 23px;
+      margin-top: 5px;
+    }
+
+    /* BUTTONS */
+
+    .btn {
+      width: 100%;
+      border: 0;
+      border-radius: 16px;
+      padding: 15px 16px;
+      font-weight: 900;
+      color: white;
+      background: var(--card2);
+      margin-top: 10px;
+    }
+
+    .btn-primary {
+      background:
+        linear-gradient(135deg, var(--accent), #ff7b2d);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: #07150d;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--line);
+    }
+
+    .btn-small {
+      width: auto;
+      padding: 10px 13px;
+      margin: 0;
+      border-radius: 12px;
+      font-size: 13px;
+    }
+
+    /* RANKING */
+
+    .ranking-list {
+      overflow: hidden;
+    }
+
+    .rank-row {
+      min-height: 66px;
+      display: grid;
+      grid-template-columns: 48px 48px 1fr auto;
+      align-items: center;
+      gap: 9px;
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .rank-row:last-child {
+      border-bottom: 0;
+    }
+
+    .rank-position {
+      font-size: 16px;
+      font-weight: 950;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .rank-photo {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      object-fit: cover;
+      background: #222;
+    }
+
+    .rank-name {
+      font-weight: 900;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .rank-meta {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    .rank-rate {
+      font-size: 13px;
+      font-weight: 850;
+      color: var(--muted);
+    }
+
+    .rank-row.mine {
+      background:
+        linear-gradient(
+          90deg,
+          rgba(255,90,54,.18),
+          rgba(255,176,46,.08)
+        );
+      border-left: 3px solid var(--accent);
+    }
+
+    /* MY CAT */
+
+    .my-cat-photo {
+      width: 100%;
+      aspect-ratio: 1/1;
+      object-fit: cover;
+      border-radius: 24px;
+      display: block;
+      background: #222;
+    }
+
+    .my-cat-info {
+      padding: 16px;
+    }
+
+    .my-cat-name {
+      font-size: 28px;
+      font-weight: 950;
+      letter-spacing: -.7px;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: 900;
+      background: var(--card2);
+    }
+
+    .status.APPROVED {
+      color: var(--success);
+    }
+
+    .status.PENDING {
+      color: var(--accent2);
+    }
+
+    .status.REJECTED,
+    .status.HIDDEN {
+      color: var(--danger);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      margin-top: 14px;
+    }
+
+    .stat {
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.045);
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 950;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    /* FORM */
+
+    .form {
+      padding: 16px;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+      margin: 0 2px 7px;
+    }
+
+    .input {
+      width: 100%;
+      border: 1px solid var(--line);
+      outline: 0;
+      background: rgba(255,255,255,.045);
+      color: var(--text);
+      padding: 14px;
+      border-radius: 14px;
+    }
+
+    .input:focus {
+      border-color: var(--accent);
+    }
+
+    /* REFERRALS */
+
+    .invite-hero {
+      padding: 22px 18px;
+      text-align: center;
+    }
+
+    .invite-cat {
+      font-size: 66px;
+      margin-bottom: 8px;
+    }
+
+    .invite-title {
+      font-size: 24px;
+      font-weight: 950;
+    }
+
+    .invite-progress {
+      margin-top: 18px;
+      height: 12px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,.08);
+    }
+
+    .invite-progress-bar {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background:
+        linear-gradient(90deg, var(--accent), var(--accent2));
+      transition: width .3s ease;
+    }
+
+    /* ADMIN */
+
+    .admin-cat {
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .admin-cat img {
+      width: 100%;
+      max-height: 430px;
+      object-fit: cover;
+      display: block;
+      background: #222;
+    }
+
+    .admin-body {
+      padding: 14px;
+    }
+
+    .admin-name {
+      font-size: 21px;
+      font-weight: 950;
+    }
+
+    .admin-meta {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      margin-top: 5px;
+    }
+
+    .admin-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 13px;
+    }
+
+    .admin-actions .btn {
+      margin: 0;
+      padding: 12px 8px;
+      font-size: 13px;
+    }
+
+    /* NAV */
+
+    .nav {
+      position: fixed;
+      z-index: 50;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 520px;
+      min-height: 76px;
+      padding:
+        7px 8px
+        calc(7px + env(safe-area-inset-bottom));
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      background: rgba(15,16,21,.94);
+      backdrop-filter: blur(22px);
+      border-top: 1px solid var(--line);
+    }
+
+    .nav.admin-visible {
+      grid-template-columns: repeat(5, 1fr);
+    }
+
+    .nav-btn {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      font-size: 10px;
+      font-weight: 800;
+      border-radius: 14px;
+    }
+
+    .nav-btn .icon {
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .nav-btn.active {
+      color: white;
+      background: rgba(255,255,255,.055);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 35px 20px;
+      color: var(--muted);
+    }
+
+    .empty .emoji {
+      font-size: 55px;
+      display: block;
+      margin-bottom: 12px;
+    }
+
+    .toast {
+      position: fixed;
+      z-index: 100;
+      top: calc(15px + env(safe-area-inset-top));
+      left: 50%;
+      transform: translate(-50%, -130px);
+      width: calc(100% - 30px);
+      max-width: 480px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: #262932;
+      color: white;
+      box-shadow: var(--shadow);
+      font-weight: 800;
+      transition: transform .25s ease;
+    }
+
+    .toast.show {
+      transform: translate(-50%, 0);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 50px 20px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 380px) {
+      .cat-card,
+      .cat-card img {
+        height: 335px;
+        min-height: 335px;
+      }
+
+      .cat-name {
+        font-size: 17px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="toast" class="toast"></div>
+
+<div class="app">
+
+  <header class="header">
+    <div class="brand">
+      <div class="brand-icon">🐈</div>
+
+      <div>
+        <div class="brand-name">КОТОБОР</div>
+        <div class="brand-sub">кот против кота</div>
+      </div>
+    </div>
+
+    <div id="votesPill" class="votes-pill">
+      …
+    </div>
+  </header>
+
+  <main class="content">
+
+    <!-- БИТВА -->
+
+    <section id="page-battle" class="page active">
+
+      <div class="battle-title">
+        <strong>Кто круче?</strong>
+        <span>Тапни по коту. Думать долго запрещено.</span>
+      </div>
+
+      <div id="battleLoading" class="loading">
+        Ищем достойных соперников…
+      </div>
+
+      <div id="battleBox" class="battle hidden">
+
+        <button
+          id="catA"
+          class="cat-card"
+          type="button"
+        >
+          <img id="catAImage" alt="" />
+          <div class="cat-gradient"></div>
+          <div id="catAName" class="cat-name"></div>
+        </button>
+
+        <div class="vs">VS</div>
+
+        <button
+          id="catB"
+          class="cat-card"
+          type="button"
+        >
+          <img id="catBImage" alt="" />
+          <div class="cat-gradient"></div>
+          <div id="catBName" class="cat-name"></div>
+        </button>
+
+      </div>
+
+      <div
+        id="battleHelp"
+        class="battle-help hidden"
+      >
+        Просто нажми на того, кто тебе нравится больше.
+      </div>
+
+      <div
+        id="limitBox"
+        class="card timer-box hidden"
+      >
+        Новые голоса появятся через
+
+        <strong id="limitTimer">00:00:00</strong>
+
+        <button
+          id="shareFromLimit"
+          class="btn btn-primary"
+        >
+          Поделиться и получить +5 голосов
+        </button>
+      </div>
+
+    </section>
+
+
+    <!-- РЕЙТИНГ -->
+
+    <section id="page-ranking" class="page">
+
+      <div class="section-title">
+        Лучшие коты
+      </div>
+
+      <div class="section-subtitle">
+        Рейтинг формируется только реальными сравнениями.
+      </div>
+
+      <div
+        id="rankingList"
+        class="card ranking-list"
+      >
+        <div class="loading">
+          Загружаем рейтинг…
+        </div>
+      </div>
+
+    </section>
+
+
+    <!-- МОЙ КОТ -->
+
+    <section id="page-mycat" class="page">
+
+      <div class="section-title">
+        Мой кот
+      </div>
+
+      <div id="myCatContainer"></div>
+
+    </section>
+
+
+    <!-- ПРИГЛАСИТЬ -->
+
+    <section id="page-invite" class="page">
+
+      <div class="card invite-hero">
+
+        <div class="invite-cat">🐈‍⬛</div>
+
+        <div class="invite-title">
+          Зови людей в КОТОБОР
+        </div>
+
+        <div class="section-subtitle">
+          10 настоящих новых участников —
+          7 дней голосований без ограничений.
+        </div>
+
+        <div class="invite-progress">
+          <div
+            id="inviteProgressBar"
+            class="invite-progress-bar"
+          ></div>
+        </div>
+
+        <div
+          id="inviteProgressText"
+          style="
+            margin-top:10px;
+            font-weight:900;
+          "
+        >
+          0 из 10 друзей
+        </div>
+
+        <button
+          id="shareButton"
+          class="btn btn-primary"
+        >
+          Поделиться КОТОБОРОМ
+        </button>
+
+        <div
+          style="
+            margin-top:10px;
+            color:var(--muted);
+            font-size:12px;
+            line-height:1.45;
+          "
+        >
+          За шаринг можно получить +5 голосов
+          не чаще одного раза в 5 часов.
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- АДМИН -->
+
+    <section id="page-admin" class="page">
+
+      <div class="section-title">
+        Модерация
+      </div>
+
+      <div class="section-subtitle">
+        Ни одна фотография не появляется
+        в КОТОБОРЕ до одобрения.
+      </div>
+
+      <div id="adminQueue">
+        <div class="loading">
+          Загружаем очередь…
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+
+<nav id="nav" class="nav">
+
+  <button
+    class="nav-btn active"
+    data-page="battle"
+  >
+    <span class="icon">⚔️</span>
+    Битва
+  </button>
+
+  <button
+    class="nav-btn"
+    data-page="ranking"
+  >
+    <span class="icon">🏆</span>
+    Рейтинг
+  </button>
+
+  <button
+    class="nav-btn"
+    data-page="mycat"
+  >
+    <span class="icon">🐱</span>
+    Мой кот
+  </button>
+
+  <button
+    class="nav-btn"
+    data-page="invite"
+  >
+    <span class="icon">📨</span>
+    Пригласить
+  </button>
+
+  <button
+    id="adminNav"
+    class="nav-btn hidden"
+    data-page="admin"
+  >
+    <span class="icon">🛡️</span>
+    Админ
+  </button>
+
+</nav>
+
+
+<script>
+  const tg = window.Telegram?.WebApp || null;
+
+  if (tg) {
+    tg.ready();
+    tg.expand();
+
+    try {
+      tg.setHeaderColor("#0b0c10");
+      tg.setBackgroundColor("#0b0c10");
+    } catch {}
+  }
+
+  const state = {
+    me: null,
+    battle: null,
+    timer: null,
+    currentPage: "battle"
+  };
+
+
+  /* ---------------- API ---------------- */
+
+  async function api(url, options = {}) {
+
+    const headers = {
+      ...(options.headers || {})
+    };
+
+    if (
+      options.body &&
+      !(options.body instanceof FormData)
+    ) {
+      headers["Content-Type"] =
+        headers["Content-Type"] ||
+        "application/json";
+    }
+
+    if (tg?.initData) {
+      headers["x-telegram-init-data"] =
+        tg.initData;
+    }
+
+    const response = await fetch(url, {
+      ...options,
+      headers
+    });
+
+    let data = {};
+
+    try {
+      data = await response.json();
+    } catch {}
+
+    if (!response.ok) {
+
+      if (data.error === "PERMANENT_BAN") {
+        document.body.innerHTML = `
+          <div style="
+            min-height:100vh;
+            display:grid;
+            place-items:center;
+            padding:30px;
+            background:#0b0c10;
+            color:white;
+            text-align:center;
+            font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+          ">
+            <div>
+              <div style="font-size:70px">⛔</div>
+
+              <h1>
+                Вы заблокированы навсегда
+              </h1>
+
+              <p style="
+                color:#aaa;
+                line-height:1.5;
+              ">
+                Ваш аккаунт больше не может
+                пользоваться КОТОБОРОМ.
+              </p>
+            </div>
+          </div>
+        `;
+
+        throw new Error("PERMANENT_BAN");
+      }
+
+      const error = new Error(
+        data.error || "API_ERROR"
+      );
+
+      error.data = data;
+      throw error;
+    }
+
+    return data;
+  }
+
+
+  /* ---------------- TOAST ---------------- */
+
+  function toast(message) {
+
+    const el =
+      document.getElementById("toast");
+
+    el.textContent = message;
+    el.classList.add("show");
+
+    setTimeout(() => {
+      el.classList.remove("show");
+    }, 2400);
+  }
+
+
+  /* ---------------- NAV ---------------- */
+
+  document
+    .querySelectorAll(".nav-btn")
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        async () => {
+
+          const page =
+            button.dataset.page;
+
+          if (!page) return;
+
+          document
+            .querySelectorAll(".nav-btn")
+            .forEach(b =>
+              b.classList.remove("active")
+            );
+
+          button.classList.add("active");
+
+          document
+            .querySelectorAll(".page")
+            .forEach(p =>
+              p.classList.remove("active")
+            );
+
+          document
+            .getElementById(
+              `page-${page}`
+            )
+            .classList.add("active");
+
+          state.currentPage = page;
+
+          if (page === "ranking") {
+            await loadRanking();
+          }
+
+          if (page === "mycat") {
+            await loadMyCat();
+          }
+
+          if (page === "invite") {
+            renderInvite();
+          }
+
+          if (page === "admin") {
+            await loadAdminQueue();
+          }
+        }
+      );
+
+    });
+
+
+  /* ---------------- PROFILE ---------------- */
+
+  async function loadMe() {
+
+    state.me = await api("/api/me");
+
+    updateVotePill();
+
+    const role =
+      state.me.user.role;
+
+    if (
+      role === "MODERATOR" ||
+      role === "OWNER"
+    ) {
+      const nav =
+        document.getElementById("nav");
+
+      nav.classList.add(
+        "admin-visible"
+      );
+
+      document
+        .getElementById("adminNav")
+        .classList.remove("hidden");
+    }
+
+    renderInvite();
+  }
+
+
+  function updateVotePill(votes = null) {
+
+    const v =
+      votes || state.me?.votes;
+
+    const pill =
+      document.getElementById(
+        "votesPill"
+      );
+
+    if (!v) {
+      pill.textContent = "…";
+      return;
+    }
+
+    if (v.unlimited) {
+      pill.textContent = "∞ голосов";
+      return;
+    }
+
+    pill.textContent =
+      `⚡ ${v.remaining}`;
+  }
+
+
+  /* ---------------- BATTLE ---------------- */
+
+  async function loadBattle() {
+
+    clearInterval(state.timer);
+
+    const loading =
+      document.getElementById(
+        "battleLoading"
+      );
+
+    const box =
+      document.getElementById(
+        "battleBox"
+      );
+
+    const help =
+      document.getElementById(
+        "battleHelp"
+      );
+
+    const limit =
+      document.getElementById(
+        "limitBox"
+      );
+
+    loading.classList.remove("hidden");
+    box.classList.add("hidden");
+    help.classList.add("hidden");
+    limit.classList.add("hidden");
+
+    try {
+
+      const data =
+        await api("/api/battle");
+
+      state.battle = data;
+
+      document.getElementById(
+        "catAImage"
+      ).src = data.cats[0].imageUrl;
+
+      document.getElementById(
+        "catAName"
+      ).textContent = data.cats[0].name;
+
+      document.getElementById(
+        "catBImage"
+      ).src = data.cats[1].imageUrl;
+
+      document.getElementById(
+        "catBName"
+      ).textContent = data.cats[1].name;
+
+      updateVotePill(data.votes);
+
+      loading.classList.add("hidden");
+      box.classList.remove("hidden");
+      help.classList.remove("hidden");
+
+    } catch (error) {
+
+      loading.classList.add("hidden");
+
+      if (
+        error.data?.error ===
+        "VOTE_LIMIT"
+      ) {
+
+        updateVotePill(
+          error.data.votes
+        );
+
+        showLimit(
+          error.data.votes.resetsAt
+        );
+
+        return;
+      }
+
+      if (
+        error.data?.error ===
+        "NO_BATTLE_AVAILABLE"
+      ) {
+
+        loading.innerHTML = `
+          <span style="font-size:48px">
+            😼
+          </span>
+
+          <br><br>
+
+          Пока недостаточно котов
+          для новой пары.
+        `;
+
+        loading.classList.remove(
+          "hidden"
+        );
+
+        return;
+      }
+
+      console.error(error);
+
+      loading.textContent =
+        "Не удалось загрузить битву.";
+      loading.classList.remove("hidden");
+    }
+  }
+
+
+  async function vote(winnerId) {
+
+    if (!state.battle) return;
+
+    const [a, b] =
+      state.battle.cats;
+
+    document.getElementById(
+      "catA"
+    ).disabled = true;
+
+    document.getElementById(
+      "catB"
+    ).disabled = true;
+
+    try {
+
+      const data =
+        await api(
+          "/api/vote",
+          {
+            method: "POST",
+            body: JSON.stringify({
+              catAId: a.id,
+              catBId: b.id,
+              winnerId
+            })
+          }
+        );
+
+      updateVotePill(data.votes);
+
+      try {
+        tg?.HapticFeedback
+          ?.impactOccurred("light");
+      } catch {}
+
+      await loadBattle();
+
+    } catch (error) {
+
+      console.error(error);
+
+      if (
+        error.data?.error ===
+        "VOTE_LIMIT"
+      ) {
+        showLimit(
+          error.data.votes.resetsAt
+        );
+      } else {
+        toast(
+          "Голос не сохранился"
+        );
+      }
+
+    } finally {
+
+      document.getElementById(
+        "catA"
+      ).disabled = false;
+
+      document.getElementById(
+        "catB"
+      ).disabled = false;
+    }
+  }
+
+
+  document.getElementById(
+    "catA"
+  ).addEventListener(
+    "click",
+    () => {
+      if (state.battle) {
+        vote(
+          state.battle.cats[0].id
+        );
+      }
+    }
+  );
+
+
+  document.getElementById(
+    "catB"
+  ).addEventListener(
+    "click",
+    () => {
+      if (state.battle) {
+        vote(
+          state.battle.cats[1].id
+        );
+      }
+    }
+  );
+
+
+  function showLimit(resetsAt) {
+
+    document
+      .getElementById(
+        "battleBox"
+      )
+      .classList.add("hidden");
+
+    document
+      .getElementById(
+        "battleHelp"
+      )
+      .classList.add("hidden");
+
+    document
+      .getElementById(
+        "limitBox"
+      )
+      .classList.remove("hidden");
+
+    function tick() {
+
+      const diff =
+        new Date(resetsAt).getTime()
+        - Date.now();
+
+      if (diff <= 0) {
+
+        clearInterval(state.timer);
+
+        loadMe()
+          .then(loadBattle);
+
+        return;
+      }
+
+      const total =
+        Math.floor(diff / 1000);
+
+      const h =
+        String(
+          Math.floor(total / 3600)
+        ).padStart(2, "0");
+
+      const m =
+        String(
+          Math.floor(
+            (total % 3600) / 60
+          )
+        ).padStart(2, "0");
+
+      const s =
+        String(
+          total % 60
+        ).padStart(2, "0");
+
+      document.getElementById(
+        "limitTimer"
+      ).textContent =
+        `${h}:${m}:${s}`;
+    }
+
+    tick();
+
+    state.timer =
+      setInterval(tick, 1000);
+  }
+
+
+  /* ---------------- SHARE ---------------- */
+
+  async function shareKotobor() {
+
+    const ref =
+      state.me?.user?.telegramUserId;
+
+    /*
+      После создания Telegram-бота
+      BOT_USERNAME заменим на реальный username.
+    */
+
+    const botUsername =
+      "BOT_USERNAME";
+
+    const url =
+      ref
+        ? `https://t.me/${botUsername}?startapp=ref_${ref}`
+        : window.location.href;
+
+    const text =
+      "Выбирай лучших котов в КОТОБОРЕ 🐈⚔️";
+
+    try {
+
+      if (
+        tg &&
+        typeof tg.openTelegramLink ===
+          "function" &&
+        botUsername !==
+          "BOT_USERNAME"
+      ) {
+
+        const shareUrl =
+          "https://t.me/share/url" +
+          "?url=" +
+          encodeURIComponent(url) +
+          "&text=" +
+          encodeURIComponent(text);
+
+        tg.openTelegramLink(
+          shareUrl
+        );
+
+      } else if (
+        navigator.share
+      ) {
+
+        await navigator.share({
+          title: "КОТОБОР",
+          text,
+          url
+        });
+
+      } else {
+
+        await navigator.clipboard.writeText(
+          `${text} ${url}`
+        );
+
+        toast(
+          "Ссылка скопирована"
+        );
+      }
+
+      /*
+        Сейчас backend начисляет бонус
+        после успешного вызова.
+        После Telegram-подключения
+        дополнительно ужесточим подтверждение
+        факта шаринга.
+      */
+
+      const reward =
+        await api(
+          "/api/share-reward",
+          {
+            method: "POST"
+          }
+        );
+
+      state.me.votes =
+        reward.votes;
+
+      updateVotePill(
+        reward.votes
+      );
+
+      toast(
+        "+5 голосов 🐾"
+      );
+
+      if (
+        state.currentPage ===
+        "battle"
+      ) {
+        await loadBattle();
+      }
+
+    } catch (error) {
+
+      if (
+        error.data?.error ===
+        "SHARE_COOLDOWN"
+      ) {
+
+        const available =
+          new Date(
+            error.data.availableAt
+          );
+
+        toast(
+          "Бонус за шаринг ещё не восстановился"
+        );
+
+        return;
+      }
+
+      /*
+        Если пользователь отменил
+        системное меню Share —
+        бонус не начисляем.
+      */
+
+      console.error(error);
+    }
+  }
+
+
+  document.getElementById(
+    "shareButton"
+  ).addEventListener(
+    "click",
+    shareKotobor
+  );
+
+
+  document.getElementById(
+    "shareFromLimit"
+  ).addEventListener(
+    "click",
+    shareKotobor
+  );
+
+
+  /* ---------------- INVITE ---------------- */
+
+  function renderInvite() {
+
+    if (!state.me) return;
+
+    const count =
+      state.me.referrals
+        ?.confirmed || 0;
+
+    const target =
+      state.me.referrals
+        ?.target || 10;
+
+    const percent =
+      Math.min(
+        100,
+        (count / target) * 100
+      );
+
+    document.getElementById(
+      "inviteProgressBar"
+    ).style.width =
+      `${percent}%`;
+
+    document.getElementById(
+      "inviteProgressText"
+    ).textContent =
+      `${count} из ${target} друзей`;
+  }
+
+
+  /* ---------------- RANKING ---------------- */
+
+  async function loadRanking() {
+
+    const el =
+      document.getElementById(
+        "rankingList"
+      );
+
+    el.innerHTML =
+      `<div class="loading">
+        Загружаем рейтинг…
+      </div>`;
+
+    try {
+
+      const data =
+        await api("/api/ranking");
+
+      if (!data.ranking.length) {
+
+        el.innerHTML = `
+          <div class="empty">
+            <span class="emoji">🏆</span>
+            Пока никто не прошёл
+            калибровку.
+          </div>
+        `;
+
+        return;
+      }
+
+      el.innerHTML =
+        data.ranking
+          .map(cat => {
+
+            const position =
+              Number(cat.position);
+
+            let medal =
+              `#${position}`;
+
+            if (position === 1)
+              medal = "🥇";
+
+            if (position === 2)
+              medal = "🥈";
+
+            if (position === 3)
+              medal = "🥉";
+
+            return `
+              <div class="rank-row">
+
+                <div class="rank-position">
+                  ${medal}
+                </div>
+
+                <img
+                  class="rank-photo"
+                  src="${escapeAttr(
+                    cat.image_url
+                  )}"
+                  alt=""
+                />
+
+                <div>
+                  <div class="rank-name">
+                    ${escapeHtml(
+                      cat.name
+                    )}
+                  </div>
+
+                  <div class="rank-meta">
+                    ${cat.battles}
+                    сравнений
+                  </div>
+                </div>
+
+                <div class="rank-rate">
+                  ${cat.winRate}%
+                </div>
+
+              </div>
+            `;
+          })
+          .join("");
+
+    } catch (error) {
+
+      console.error(error);
+
+      el.innerHTML =
+        `<div class="empty">
+          Не удалось загрузить рейтинг.
+        </div>`;
+    }
+  }
+
+
+  /* ---------------- MY CAT ---------------- */
+
+  async function loadMyCat() {
+
+    const container =
+      document.getElementById(
+        "myCatContainer"
+      );
+
+    container.innerHTML =
+      `<div class="loading">
+        Загружаем…
+      </div>`;
+
+    try {
+
+      await loadMe();
+
+      const cat =
+        state.me.cat;
+
+      if (!cat) {
+
+        renderAddCatForm(
+          container
+        );
+
+        return;
+      }
+
+      let ranking = null;
+
+      if (
+        cat.status === "APPROVED" &&
+        cat.calibration_battles >= 20
+      ) {
+        ranking =
+          await api(
+            "/api/my-cat-ranking"
+          );
+      }
+
+      const battles =
+        Number(cat.battles || 0);
+
+      const wins =
+        Number(cat.wins || 0);
+
+      const winRate =
+        battles
+          ? Math.round(
+              wins / battles * 1000
+            ) / 10
+          : 0;
+
+      let extra = "";
+
+      if (
+        cat.status === "APPROVED" &&
+        cat.calibration_battles < 20
+      ) {
+
+        extra = `
+          <div
+            class="card"
+            style="
+              margin-top:14px;
+              padding:17px;
+            "
+          >
+            <strong>
+              Определяем место
+              в рейтинге
+            </strong>
+
+            <div style="
+              margin-top:7px;
+              color:var(--muted);
+            ">
+              ${cat.calibration_battles}
+              / 20 оценок
+            </div>
+          </div>
+        `;
+
+      } else if (
+        ranking?.calibrated
+      ) {
+
+        extra = `
+          <div
+            class="card"
+            style="
+              margin-top:14px;
+              padding:18px;
+            "
+          >
+
+            <div
+              style="
+                font-size:26px;
+                font-weight:950;
+              "
+            >
+              #${ranking.position}
+              из ${ranking.total}
+            </div>
+
+            <div
+              style="
+                margin-top:6px;
+                color:var(--muted);
+              "
+            >
+              Красивее
+              ${ranking.percentile}%
+              котов
+            </div>
+
+          </div>
+
+          <div
+            style="
+              font-weight:950;
+              font-size:18px;
+              margin:20px 2px 10px;
+            "
+          >
+            Соседи по рейтингу
+          </div>
+
+          <div
+            class="card ranking-list"
+          >
+
+            ${ranking.around
+              .map(row => {
+
+                const mine =
+                  String(row.owner_id) ===
+                  String(
+                    state.me.user.id
+                  );
+
+                const wr =
+                  row.battles > 0
+                    ? Math.round(
+                        row.wins /
+                        row.battles *
+                        1000
+                      ) / 10
+                    : 0;
+
+                return `
+                  <div
+                    class="
+                      rank-row
+                      ${mine ? "mine" : ""}
+                    "
+                  >
+
+                    <div class="rank-position">
+                      #${row.position}
+                    </div>
+
+                    <img
+                      class="rank-photo"
+                      src="${escapeAttr(
+                        row.image_url
+                      )}"
+                      alt=""
+                    />
+
+                    <div>
+                      <div class="rank-name">
+                        ${escapeHtml(
+                          row.name
+                        )}
+                        ${
+                          mine
+                            ? " — ВЫ"
+                            : ""
+                        }
+                      </div>
+
+                      <div class="rank-meta">
+                        ${row.battles}
+                        сравнений
+                      </div>
+                    </div>
+
+                    <div class="rank-rate">
+                      ${wr}%
+                    </div>
+
+                  </div>
+                `;
+              })
+              .join("")}
+
+          </div>
+        `;
+      }
+
+      container.innerHTML = `
+
+        <div class="card">
+
+          <img
+            class="my-cat-photo"
+            src="${escapeAttr(
+              cat.image_url
+            )}"
+            alt=""
+          />
+
+          <div class="my-cat-info">
+
+            <div class="my-cat-name">
+              ${escapeHtml(
+                cat.name
+              )}
+            </div>
+
+            <div
+              class="status ${cat.status}"
+            >
+              ${statusName(
+                cat.status
+              )}
+            </div>
+
+            <div class="stats-grid">
+
+              <div class="stat">
+                <div class="stat-value">
+                  ${battles}
+                </div>
+                <div class="stat-label">
+                  Сравнений
+                </div>
+              </div>
+
+              <div class="stat">
+                <div class="stat-value">
+                  ${winRate}%
+                </div>
+                <div class="stat-label">
+                  Выбирают
+                </div>
+              </div>
+
+              <div class="stat">
+                <div class="stat-value">
+                  ${wins}
+                </div>
+                <div class="stat-label">
+                  Побед
+                </div>
+              </div>
+
+              <div class="stat">
+                <div class="stat-value">
+                  ${cat.losses || 0}
+                </div>
+                <div class="stat-label">
+                  Поражений
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        ${extra}
+      `;
+
+    } catch (error) {
+
+      console.error(error);
+
+      container.innerHTML =
+        `<div class="empty">
+          Не удалось загрузить кота.
+        </div>`;
+    }
+  }
+
+
+  function renderAddCatForm(
+    container
+  ) {
+
+    container.innerHTML = `
+
+      <div class="card form">
+
+        <div style="
+          font-size:52px;
+          text-align:center;
+          margin-bottom:8px;
+        ">
+          🐱
+        </div>
+
+        <div style="
+          text-align:center;
+          font-size:21px;
+          font-weight:950;
+          margin-bottom:17px;
+        ">
+          Добавь своего кота
+        </div>
+
+        <div class="field">
+          <label>
+            Кличка
+          </label>
+
+          <input
+            id="newCatName"
+            class="input"
+            maxlength="40"
+            placeholder="Например, Барсик"
+          />
+        </div>
+
+        <div class="field">
+
+          <label>
+            Фотография
+          </label>
+
+          <input
+            id="newCatImage"
+            class="input"
+            placeholder="На следующем шаге подключим загрузку фото"
+            disabled
+          />
+
+        </div>
+
+        <div style="
+          color:var(--muted);
+          font-size:12px;
+          line-height:1.5;
+        ">
+          Ни одна фотография не появляется
+          публично без проверки модератором.
+        </div>
+
+        <button
+          class="btn btn-primary"
+          disabled
+        >
+          Загрузку фото подключаем следующим шагом
+        </button>
+
+      </div>
+    `;
+  }
+
+
+  function statusName(status) {
+
+    const map = {
+      PENDING: "На модерации",
+      APPROVED: "Допущен к битвам",
+      REJECTED: "Отклонён",
+      HIDDEN: "Скрыт"
+    };
+
+    return map[status] || status;
+  }
+
+
+  /* ---------------- ADMIN ---------------- */
+
+  async function loadAdminQueue() {
+
+    const el =
+      document.getElementById(
+        "adminQueue"
+      );
+
+    el.innerHTML =
+      `<div class="loading">
+        Загружаем очередь…
+      </div>`;
+
+    try {
+
+      const data =
+        await api(
+          "/api/admin/pending"
+        );
+
+      if (!data.cats.length) {
+
+        el.innerHTML = `
+          <div class="empty">
+            <span class="emoji">😺</span>
+            Очередь пуста.
+          </div>
+        `;
+
+        return;
+      }
+
+      el.innerHTML =
+        data.cats
+          .map(cat => `
+
+            <div
+              class="card admin-cat"
+            >
+
+              <img
+                src="${escapeAttr(
+                  cat.image_url
+                )}"
+                alt=""
+              />
+
+              <div class="admin-body">
+
+                <div class="admin-name">
+                  ${escapeHtml(
+                    cat.name
+                  )}
+                </div>
+
+                <div class="admin-meta">
+
+                  Пользователь:
+                  ${
+                    cat.username
+                      ? "@" +
+                        escapeHtml(
+                          cat.username
+                        )
+                      : escapeHtml(
+                          cat.first_name ||
+                          "без username"
+                        )
+                  }
+
+                  <br>
+
+                  Telegram ID:
+                  ${escapeHtml(
+                    cat.telegram_user_id
+                  )}
+
+                </div>
+
+                <div class="admin-actions">
+
+                  <button
+                    class="btn btn-success"
+                    onclick="
+                      approveCat(
+                        '${cat.id}'
+                      )
+                    "
+                  >
+                    Одобрить
+                  </button>
+
+                  <button
+                    class="btn"
+                    onclick="
+                      rejectCat(
+                        '${cat.id}'
+                      )
+                    "
+                  >
+                    Отклонить
+                  </button>
+
+                </div>
+
+                <button
+                  class="btn btn-danger"
+                  onclick="
+                    permanentBan(
+                      '${cat.owner_id}'
+                    )
+                  "
+                >
+                  Заблокировать навсегда
+                </button>
+
+              </div>
+
+            </div>
+
+          `)
+          .join("");
+
+    } catch (error) {
+
+      console.error(error);
+
+      el.innerHTML =
+        `<div class="empty">
+          Нет доступа или ошибка загрузки.
+        </div>`;
+    }
+  }
+
+
+  window.approveCat =
+    async function(id) {
+
+      if (
+        !confirm(
+          "Одобрить этого кота?"
+        )
+      ) return;
+
+      try {
+
+        await api(
+          `/api/admin/cats/${id}/approve`,
+          {
+            method: "POST"
+          }
+        );
+
+        toast("Кот одобрен");
+
+        await loadAdminQueue();
+
+      } catch {
+        toast(
+          "Не удалось одобрить"
+        );
+      }
+    };
+
+
+  window.rejectCat =
+    async function(id) {
+
+      const reason =
+        prompt(
+          "Причина: не кот / плохое качество / дубликат / мем / другое"
+        );
+
+      if (!reason) return;
+
+      try {
+
+        await api(
+          `/api/admin/cats/${id}/reject`,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              reason
+            })
+          }
+        );
+
+        toast("Фото отклонено");
+
+        await loadAdminQueue();
+
+      } catch {
+        toast(
+          "Не удалось отклонить"
+        );
+      }
+    };
+
+
+  window.permanentBan =
+    async function(userId) {
+
+      const confirmed =
+        confirm(
+          "Заблокировать пользователя НАВСЕГДА?\n\nОтменить это действие сможет только владелец."
+        );
+
+      if (!confirmed) return;
+
+      const reason =
+        prompt(
+          "Укажи серьёзную причину блокировки"
+        );
+
+      if (!reason) return;
+
+      try {
+
+        await api(
+          `/api/admin/users/${userId}/permanent-ban`,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              reason
+            })
+          }
+        );
+
+        toast(
+          "Пользователь заблокирован"
+        );
+
+        await loadAdminQueue();
+
+      } catch {
+        toast(
+          "Не удалось заблокировать"
+        );
+      }
+    };
+
+
+  /* ---------------- HELPERS ---------------- */
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+
+  function escapeAttr(value) {
+    return escapeHtml(value);
+  }
+
+
+  /* ---------------- START ---------------- */
+
+  async function start() {
+
+    try {
+
+      await loadMe();
+      await loadBattle();
+
+    } catch (error) {
+
+      console.error(error);
+
+      if (
+        error.message ===
+        "PERMANENT_BAN"
+      ) return;
+
+      document.getElementById(
+        "battleLoading"
+      ).innerHTML = `
+        <span style="
+          font-size:50px;
+        ">
+          🐈
+        </span>
+
+        <br><br>
+
+        КОТОБОР пока не подключён
+        к Telegram или серверу.
+      `;
+    }
+  }
+
+
+  start();
+</script>
+
+</body>
+</html>
