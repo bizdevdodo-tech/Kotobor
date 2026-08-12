@@ -1,7 +1,6 @@
 const express = require("express");
 const { Pool } = require("pg");
 const helmet = require("helmet");
-const rateLimit = require("express-rate-limit");
 const sharp = require("sharp");
 const path = require("path");
 const crypto = require("crypto");
