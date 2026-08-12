@@ -5,7 +5,7 @@
 
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover"
+    content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
   />
 
   <title>КОТОБОР</title>
@@ -30,6 +30,12 @@
     * {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
     }
 
     html,
@@ -44,6 +50,32 @@
         "Segoe UI",
         Roboto,
         sans-serif;
+      overscroll-behavior: none;
+    }
+
+    body.mobile-body {
+      overflow: hidden;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+    }
+
+    .mobile-wrap {
+      position: absolute;
+      inset: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .mobile-content {
+      min-height: calc(100% + 1px);
+    }
+
+    img {
+      -webkit-user-drag: none;
+      user-select: none;
+      -webkit-touch-callout: none;
     }
 
     body {
@@ -55,8 +87,10 @@
 
     button,
     input,
-    textarea {
+    textarea,
+    select {
       font: inherit;
+      font-size: 16px;
     }
 
     button {
@@ -200,12 +234,15 @@
       border-radius: 24px;
       background: #151515;
       color: white;
+      touch-action: manipulation;
     }
 
     .cat-card img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      pointer-events: none;
+      touch-action: none;
     }
 
     .cat-gradient {
@@ -324,8 +361,12 @@
     .rank-photo {
       width: 46px;
       height: 46px;
+      min-width: 46px;
+      min-height: 46px;
       border-radius: 14px;
       object-fit: cover;
+      pointer-events: none;
+      touch-action: none;
     }
 
     .rank-name {
@@ -346,10 +387,14 @@
 
     .my-cat-photo {
       width: 100%;
+      height: auto;
+      max-height: 420px;
       aspect-ratio: 1 / 1;
       display: block;
       object-fit: cover;
       border-radius: 23px 23px 0 0;
+      pointer-events: none;
+      touch-action: none;
     }
 
     .my-cat-info {
@@ -469,9 +514,13 @@
 
     .photo-preview {
       width: 100%;
-      max-height: 410px;
+      height: 220px;
+      max-height: 220px;
       display: block;
-      object-fit: contain;
+      object-fit: cover;
+      border-radius: 12px;
+      pointer-events: none;
+      touch-action: none;
     }
 
     .file-input {
@@ -545,10 +594,13 @@
 
     .admin-cat img {
       width: 100%;
-      max-height: 520px;
+      height: 280px;
+      max-height: 280px;
       display: block;
-      object-fit: contain;
+      object-fit: cover;
       background: #090a0d;
+      pointer-events: none;
+      touch-action: none;
     }
 
     .admin-body {
@@ -690,6 +742,9 @@
 <body>
 
   <div id="toast" class="toast"></div>
+
+  <div id="appWrap">
+    <div id="appContent">
 
   <div class="app">
 
@@ -916,12 +971,73 @@
 
   </nav>
 
+    </div>
+  </div>
+
   <script>
     const tg =
       window.Telegram?.WebApp ||
       null;
 
-    if (tg) {
+    const DESKTOP_PLATFORMS = [
+      "macos",
+      "tdesktop",
+      "weba",
+      "web",
+      "webk"
+    ];
+
+    function preventAppZoom() {
+      [
+        "gesturestart",
+        "gesturechange",
+        "gestureend"
+      ].forEach((eventName) => {
+        document.addEventListener(
+          eventName,
+          (event) => {
+            event.preventDefault();
+          },
+          { passive: false }
+        );
+      });
+
+      document.addEventListener(
+        "dblclick",
+        (event) => {
+          event.preventDefault();
+        },
+        { passive: false }
+      );
+
+      let lastTouchEnd = 0;
+
+      document.addEventListener(
+        "touchend",
+        (event) => {
+          const now =
+            Date.now();
+
+          if (
+            now - lastTouchEnd <
+            300
+          ) {
+            event.preventDefault();
+          }
+
+          lastTouchEnd = now;
+        },
+        { passive: false }
+      );
+    }
+
+    function initTelegramApp() {
+      preventAppZoom();
+
+      if (!tg) {
+        return;
+      }
+
       tg.ready();
       tg.expand();
 
@@ -929,7 +1045,49 @@
         tg.setHeaderColor("#0b0c10");
         tg.setBackgroundColor("#0b0c10");
       } catch {}
+
+      if (
+        typeof tg.disableVerticalSwipes ===
+        "function"
+      ) {
+        try {
+          tg.disableVerticalSwipes();
+        } catch {}
+      }
+
+      const platform =
+        String(
+          tg.platform || ""
+        );
+
+      if (
+        !DESKTOP_PLATFORMS.includes(
+          platform
+        )
+      ) {
+        document.body.classList.add(
+          "mobile-body"
+        );
+
+        document
+          .getElementById(
+            "appWrap"
+          )
+          ?.classList.add(
+            "mobile-wrap"
+          );
+
+        document
+          .getElementById(
+            "appContent"
+          )
+          ?.classList.add(
+            "mobile-content"
+          );
+      }
     }
+
+    initTelegramApp();
 
     const BOT_USERNAME =
       "Kotobor_bot";
@@ -938,8 +1096,39 @@
       me: null,
       battle: null,
       timer: null,
-      selectedImageData: null
+      selectedFile: null,
+      previewObjectUrl: null
     };
+
+    function clearSelectedPhoto() {
+      if (state.previewObjectUrl) {
+        URL.revokeObjectURL(
+          state.previewObjectUrl
+        );
+      }
+
+      state.selectedFile = null;
+      state.previewObjectUrl = null;
+    }
+
+    function uploadErrorMessage(errorCode) {
+      switch (errorCode) {
+        case "CAT_ALREADY_EXISTS":
+          return "У тебя уже есть кот на модерации или в рейтинге";
+
+        case "INVALID_CAT_NAME":
+          return "Напиши кличку кота";
+
+        case "IMAGE_TOO_LARGE":
+          return "Фото слишком большое. Попробуй другое";
+
+        case "INVALID_IMAGE":
+          return "Не удалось обработать фото. Попробуй JPG или PNG";
+
+        default:
+          return "Ошибка загрузки фотографии";
+      }
+    }
 
     async function api(url, options = {}) {
       const headers = {
@@ -1561,106 +1750,6 @@
       }
     }
 
-    function readFileAsDataURL(file) {
-      return new Promise(
-        (resolve, reject) => {
-
-          const reader =
-            new FileReader();
-
-          reader.onload =
-            () =>
-              resolve(reader.result);
-
-          reader.onerror =
-            reject;
-
-          reader.readAsDataURL(file);
-        }
-      );
-    }
-
-    function loadImage(src) {
-      return new Promise(
-        (resolve, reject) => {
-
-          const image =
-            new Image();
-
-          image.onload =
-            () =>
-              resolve(image);
-
-          image.onerror =
-            reject;
-
-          image.src =
-            src;
-        }
-      );
-    }
-
-    async function prepareImage(file) {
-      const originalData =
-        await readFileAsDataURL(file);
-
-      const image =
-        await loadImage(originalData);
-
-      const maxSide =
-        1600;
-
-      let width =
-        image.naturalWidth ||
-        image.width;
-
-      let height =
-        image.naturalHeight ||
-        image.height;
-
-      if (
-        width > maxSide ||
-        height > maxSide
-      ) {
-        const ratio =
-          Math.min(
-            maxSide / width,
-            maxSide / height
-          );
-
-        width =
-          Math.round(width * ratio);
-
-        height =
-          Math.round(height * ratio);
-      }
-
-      const canvas =
-        document.createElement("canvas");
-
-      canvas.width =
-        width;
-
-      canvas.height =
-        height;
-
-      const ctx =
-        canvas.getContext("2d");
-
-      ctx.drawImage(
-        image,
-        0,
-        0,
-        width,
-        height
-      );
-
-      return canvas.toDataURL(
-        "image/jpeg",
-        .84
-      );
-    }
-
     async function loadMyCat() {
       const container =
         document.getElementById(
@@ -1965,8 +2054,7 @@
     }
 
     function renderAddCatForm(container) {
-      state.selectedImageData =
-        null;
+      clearSelectedPhoto();
 
       container.innerHTML = `
         <div class="card form">
@@ -2109,17 +2197,57 @@
               "photoStatus"
             );
 
+          if (
+            file.type &&
+            !file.type.startsWith(
+              "image/"
+            )
+          ) {
+            clearSelectedPhoto();
+
+            status.textContent =
+              "";
+
+            toast(
+              "Выбери файл с фотографией"
+            );
+
+            input.value = "";
+
+            return;
+          }
+
+          if (
+            file.size >
+            20 * 1024 * 1024
+          ) {
+            clearSelectedPhoto();
+
+            status.textContent =
+              "";
+
+            toast(
+              "Фото слишком большое"
+            );
+
+            input.value = "";
+
+            return;
+          }
+
           status.textContent =
-            "Обрабатываем фотографию…";
+            "Готовим превью…";
 
           try {
-            const imageData =
-              await prepareImage(
+            clearSelectedPhoto();
+
+            state.selectedFile =
+              file;
+
+            state.previewObjectUrl =
+              URL.createObjectURL(
                 file
               );
-
-            state.selectedImageData =
-              imageData;
 
             const preview =
               document.getElementById(
@@ -2127,7 +2255,7 @@
               );
 
             preview.src =
-              imageData;
+              state.previewObjectUrl;
 
             preview.classList.remove(
               "hidden"
@@ -2147,8 +2275,7 @@
           } catch (error) {
             console.error(error);
 
-            state.selectedImageData =
-              null;
+            clearSelectedPhoto();
 
             status.textContent =
               "";
@@ -2156,6 +2283,8 @@
             toast(
               "Не удалось прочитать фото"
             );
+
+            input.value = "";
           }
         }
       );
@@ -2188,7 +2317,7 @@
       }
 
       if (
-        !state.selectedImageData
+        !state.selectedFile
       ) {
         toast(
           "Сначала выбери фотографию"
@@ -2209,22 +2338,31 @@
         "Загружаем…";
 
       try {
+        const formData =
+          new FormData();
+
+        formData.append(
+          "name",
+          name
+        );
+
+        formData.append(
+          "photo",
+          state.selectedFile,
+          state.selectedFile.name ||
+            "cat.jpg"
+        );
+
         await api(
           "/api/cats/upload",
           {
             method: "POST",
 
-            body:
-              JSON.stringify({
-                name,
-                imageData:
-                  state.selectedImageData
-              })
+            body: formData
           }
         );
 
-        state.selectedImageData =
-          null;
+        clearSelectedPhoto();
 
         toast(
           "Кот отправлен на модерацию 🐈"
@@ -2235,18 +2373,11 @@
       } catch (error) {
         console.error(error);
 
-        if (
-          error.data?.error ===
-          "CAT_ALREADY_EXISTS"
-        ) {
-          toast(
-            "У тебя уже есть кот на модерации или в рейтинге"
-          );
-        } else {
-          toast(
-            "Ошибка загрузки фотографии"
-          );
-        }
+        toast(
+          uploadErrorMessage(
+            error.data?.error
+          )
+        );
 
       } finally {
         button.disabled =
