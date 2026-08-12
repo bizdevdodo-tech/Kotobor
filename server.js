@@ -2,6 +2,7 @@ const express = require("express");
 const { Pool } = require("pg");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+const sharp = require("sharp");
 const path = require("path");
 const crypto = require("crypto");
 
@@ -2742,15 +2743,12 @@ function decodeImageDataUrl(
 
   const match =
     text.match(
-      /^data:(image\/jpeg|image\/png|image\/webp);base64,([A-Za-z0-9+/=]+)$/
+      /^data:(image\/[a-z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$/i
     );
 
   if (!match) {
     return null;
   }
-
-  const mime =
-    match[1];
 
   const buffer =
     Buffer.from(
@@ -2761,15 +2759,63 @@ function decodeImageDataUrl(
   if (
     !buffer.length ||
     buffer.length >
-      MAX_IMAGE_BYTES
+      MAX_IMAGE_BYTES * 2
   ) {
     return null;
   }
 
   return {
-    mime,
     buffer,
   };
+}
+
+async function normalizeImage(
+  inputBuffer
+) {
+  try {
+    const buffer =
+      await sharp(
+        inputBuffer,
+        {
+          failOn: "none",
+        }
+      )
+        .rotate()
+        .resize(
+          1600,
+          1600,
+          {
+            fit: "inside",
+            withoutEnlargement:
+              true,
+          }
+        )
+        .jpeg({
+          quality: 84,
+        })
+        .toBuffer();
+
+    if (
+      !buffer.length ||
+      buffer.length >
+        MAX_IMAGE_BYTES
+    ) {
+      return null;
+    }
+
+    return {
+      mime:
+        "image/jpeg",
+      buffer,
+    };
+  } catch (error) {
+    console.error(
+      "Image processing error:",
+      error
+    );
+
+    return null;
+  }
 }
 
 app.post(
@@ -2797,9 +2843,23 @@ app.post(
           });
       }
 
-      const image =
+      const decoded =
         decodeImageDataUrl(
           req.body.imageData
+        );
+
+      if (!decoded) {
+        return res
+          .status(400)
+          .json({
+            error:
+              "INVALID_IMAGE",
+          });
+      }
+
+      const image =
+        await normalizeImage(
+          decoded.buffer
         );
 
       if (!image) {
