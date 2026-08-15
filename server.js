@@ -37,6 +37,15 @@ const APP_URL =
 
 const BOT_USERNAME = "Kotobor_bot";
 
+const GROUP_CHAT_ID =
+  process.env.GROUP_CHAT_ID
+    ? String(process.env.GROUP_CHAT_ID)
+    : null;
+
+const GROUP_URL =
+  process.env.GROUP_URL ||
+  "https://t.me/+WZXWZGoN9bc4MThi";
+
 const FIVE_HOURS_MS =
   5 * 60 * 60 * 1000;
 
@@ -1133,6 +1142,50 @@ async function sendTelegramMessage(
   }
 }
 
+async function isUserInGroup(
+  telegramUserId
+) {
+  if (
+    !BOT_TOKEN ||
+    !GROUP_CHAT_ID ||
+    !telegramUserId
+  ) {
+    return null;
+  }
+
+  try {
+    const member =
+      await telegramApi(
+        "getChatMember",
+        {
+          chat_id:
+            GROUP_CHAT_ID,
+
+          user_id:
+            Number(
+              telegramUserId
+            ),
+        }
+      );
+
+    return [
+      "creator",
+      "administrator",
+      "member",
+      "restricted",
+    ].includes(
+      member.status
+    );
+  } catch (error) {
+    console.error(
+      "Group membership error:",
+      error.message
+    );
+
+    return null;
+  }
+}
+
 async function notifyUserByInternalId(
   userId,
   text
@@ -1879,6 +1932,11 @@ app.get(
           WHERE owner_id =
             $1
 
+            AND status IN (
+              'PENDING',
+              'APPROVED'
+            )
+
           ORDER BY
             created_at DESC
           `,
@@ -1930,6 +1988,11 @@ app.get(
           [req.user.id]
         );
 
+      const inGroup =
+        await isUserInGroup(
+          req.user.telegram_user_id
+        );
+
       res.json({
         user:
           safeUser(
@@ -1953,6 +2016,17 @@ app.get(
 
           target:
             REFERRALS_FOR_UNLIMITED,
+        },
+
+        group: {
+          url:
+            GROUP_URL,
+
+          member:
+            inGroup === true,
+
+          known:
+            inGroup !== null,
         },
       });
     } catch (error) {
@@ -3158,6 +3232,150 @@ ID кота: ${cat.id}`
           error:
             "CAT_UPLOAD_ERROR",
         });
+    }
+  }
+);
+
+/* =========================================================
+   DELETE OWN CAT
+   ========================================================= */
+
+app.post(
+  "/api/cats/:id/delete",
+  auth,
+  async (
+    req,
+    res
+  ) => {
+    const client =
+      await pool.connect();
+
+    try {
+      await client.query(
+        "BEGIN"
+      );
+
+      const catResult =
+        await client.query(
+          `
+          SELECT id, name
+
+          FROM cats
+
+          WHERE id =
+            $1
+
+            AND owner_id =
+              $2
+
+          FOR UPDATE
+          `,
+          [
+            req.params.id,
+            req.user.id,
+          ]
+        );
+
+      if (
+        !catResult.rows.length
+      ) {
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res
+          .status(404)
+          .json({
+            error:
+              "CAT_NOT_FOUND",
+          });
+      }
+
+      const catId =
+        catResult.rows[0].id;
+
+      await client.query(
+        `
+        DELETE FROM votes
+
+        WHERE cat_a_id =
+          $1
+
+          OR cat_b_id =
+            $1
+
+          OR winner_id =
+            $1
+
+          OR loser_id =
+            $1
+        `,
+        [catId]
+      );
+
+      await client.query(
+        `
+        DELETE FROM reports
+
+        WHERE cat_id =
+          $1
+        `,
+        [catId]
+      );
+
+      await client.query(
+        `
+        DELETE FROM moderation_actions
+
+        WHERE cat_id =
+          $1
+        `,
+        [catId]
+      );
+
+      await client.query(
+        `
+        DELETE FROM cats
+
+        WHERE id =
+          $1
+
+          AND owner_id =
+            $2
+        `,
+        [
+          catId,
+          req.user.id,
+        ]
+      );
+
+      await client.query(
+        "COMMIT"
+      );
+
+      res.json({
+        success: true,
+      });
+    } catch (error) {
+      await client
+        .query(
+          "ROLLBACK"
+        )
+        .catch(() => {});
+
+      console.error(
+        "Cat delete error:",
+        error
+      );
+
+      res
+        .status(500)
+        .json({
+          error:
+            "CAT_DELETE_ERROR",
+        });
+    } finally {
+      client.release();
     }
   }
 );
