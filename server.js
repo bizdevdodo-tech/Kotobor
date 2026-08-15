@@ -658,7 +658,7 @@ async function initDatabase() {
   `);
 
   const resetKey =
-    "rating_reset_v1";
+    "rating_reset_v2";
 
   const already =
     await pool.query(
@@ -673,6 +673,14 @@ async function initDatabase() {
 
   if (!already.rows.length) {
     await pool.query(`
+      DELETE FROM votes;
+    `);
+
+    await pool.query(`
+      DELETE FROM swipes;
+    `);
+
+    await pool.query(`
       UPDATE cats
 
       SET
@@ -681,11 +689,12 @@ async function initDatabase() {
         wins = 0,
         losses = 0,
         calibration_battles = 0,
-        updated_at = NOW();
-    `);
+        battle_unlock_notified_at =
+          NULL,
+        updated_at = NOW()
 
-    await pool.query(`
-      DELETE FROM votes;
+      WHERE status =
+        'APPROVED';
     `);
 
     await pool.query(
@@ -700,7 +709,7 @@ async function initDatabase() {
     );
 
     console.log(
-      "All cat ratings reset to 1000"
+      "Cats reset like freshly approved: ratings/battles/swipes cleared"
     );
   }
 
