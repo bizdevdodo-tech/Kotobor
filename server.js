@@ -51,12 +51,16 @@ const FIVE_HOURS_MS =
 
 const BASE_LIMIT = 10;
 const CAT_LIMIT = 20;
+const MAX_CATS_PER_USER = 2;
 const SHARE_BONUS = 5;
 const REFERRALS_FOR_UNLIMITED = 10;
 const SWIPE_BATTLE_UNLOCK = 8;
 const SWIPE_CAT_COOLDOWN = 8;
 const SWIPE_PRIOR_A = 1;
 const SWIPE_PRIOR_B = 1;
+const FACT_SWIPE_MIN = 10;
+const FACT_SWIPE_MAX = 15;
+const FACT_TEXT_MAX = 200;
 
 const SWIPE_QUESTIONS = [
   { key: "cool", text: "Этот кот крутой?" },
@@ -275,6 +279,39 @@ function imageUrlForCat(cat) {
   }
 
   return `/api/cat-image/${cat.id}/${cat.image_key}`;
+}
+
+function imageUrlForFact(fact) {
+  if (
+    !fact ||
+    !fact.id ||
+    !fact.image_key
+  ) {
+    return null;
+  }
+
+  return `/api/fact-image/${fact.id}/${fact.image_key}`;
+}
+
+function randomFactSwipeGap() {
+  return (
+    FACT_SWIPE_MIN +
+    Math.floor(
+      Math.random() *
+        (FACT_SWIPE_MAX -
+          FACT_SWIPE_MIN +
+          1)
+    )
+  );
+}
+
+function nextFactSwipeTarget(
+  swipeCount
+) {
+  return (
+    Number(swipeCount || 0) +
+    randomFactSwipeGap()
+  );
 }
 
 /* =========================================================
@@ -645,6 +682,83 @@ async function initDatabase() {
       ADD COLUMN IF NOT EXISTS
         battle_unlock_notified_at
         TIMESTAMPTZ;
+
+    ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS
+        fact_next_swipe
+        INTEGER;
+
+    CREATE TABLE IF NOT EXISTS facts (
+      id BIGSERIAL PRIMARY KEY,
+
+      text
+        TEXT
+        NOT NULL,
+
+      image_key
+        TEXT
+        NOT NULL,
+
+      image_mime
+        TEXT
+        NOT NULL,
+
+      image_data
+        BYTEA
+        NOT NULL,
+
+      created_by
+        BIGINT
+        REFERENCES users(id),
+
+      created_at
+        TIMESTAMPTZ
+        NOT NULL
+        DEFAULT NOW(),
+
+      CONSTRAINT facts_text_len
+        CHECK (
+          char_length(text) >= 1
+          AND char_length(text) <= 200
+        )
+    );
+
+    CREATE TABLE IF NOT EXISTS fact_votes (
+      id BIGSERIAL PRIMARY KEY,
+
+      user_id
+        BIGINT
+        NOT NULL
+        REFERENCES users(id),
+
+      fact_id
+        BIGINT
+        NOT NULL
+        REFERENCES facts(id)
+        ON DELETE CASCADE,
+
+      interesting
+        BOOLEAN
+        NOT NULL,
+
+      created_at
+        TIMESTAMPTZ
+        NOT NULL
+        DEFAULT NOW(),
+
+      UNIQUE (
+        user_id,
+        fact_id
+      )
+    );
+
+    CREATE INDEX IF NOT EXISTS
+      idx_fact_votes_fact
+      ON fact_votes(fact_id);
+
+    CREATE INDEX IF NOT EXISTS
+      idx_fact_votes_user
+      ON fact_votes(user_id);
 
   `);
 
@@ -1322,35 +1436,171 @@ async function sendTelegramMessage(
   text,
   extra = {}
 ) {
+  const result =
+    await sendTelegramMessageResult(
+      chatId,
+      text,
+      extra
+    );
+
+  return result.ok;
+}
+
+async function sendTelegramMessageResult(
+  chatId,
+  text,
+  extra = {}
+) {
   if (
     !BOT_TOKEN ||
-    !chatId
+    chatId === null ||
+    chatId === undefined ||
+    chatId === ""
   ) {
-    return false;
+    return {
+      ok: false,
+      error:
+        "NO_CHAT_OR_TOKEN",
+    };
+  }
+
+  const normalizedId =
+    /^\d+$/.test(
+      String(chatId).trim()
+    )
+      ? Number(
+          String(
+            chatId
+          ).trim()
+        )
+      : chatId;
+
+  const payload = {
+    chat_id:
+      normalizedId,
+
+    text,
+
+    ...extra,
+  };
+
+  if (
+    !payload.reply_markup &&
+    APP_URL
+  ) {
+    payload.reply_markup = {
+      inline_keyboard: [
+        [
+          {
+            text:
+              "⚔️ Открыть КОТОБОР",
+
+            web_app: {
+              url:
+                APP_URL,
+            },
+          },
+        ],
+      ],
+    };
   }
 
   try {
     await telegramApi(
       "sendMessage",
-      {
-        chat_id:
-          chatId,
-
-        text,
-
-        ...extra,
-      }
+      payload
     );
 
-    return true;
+    return {
+      ok: true,
+    };
   } catch (error) {
+    const message =
+      String(
+        error.message ||
+          "UNKNOWN"
+      );
+
+    const retryMatch =
+      message.match(
+        /retry after (\d+)/i
+      );
+
+    if (retryMatch) {
+      await sleep(
+        (
+          Number(
+            retryMatch[1]
+          ) + 1
+        ) *
+          1000
+      );
+
+      try {
+        await telegramApi(
+          "sendMessage",
+          payload
+        );
+
+        return {
+          ok: true,
+        };
+      } catch (retryError) {
+        console.error(
+          "Telegram send retry error:",
+          retryError.message
+        );
+
+        return {
+          ok: false,
+          error:
+            retryError.message ||
+            message,
+        };
+      }
+    }
+
     console.error(
       "Telegram send error:",
-      error.message
+      message
     );
 
-    return false;
+    return {
+      ok: false,
+      error: message,
+    };
   }
+}
+
+function summarizeBroadcastErrors(
+  errors
+) {
+  const counts = {};
+
+  for (const item of errors) {
+    const key =
+      item.error ||
+      "UNKNOWN";
+
+    counts[key] =
+      (counts[key] || 0) +
+      1;
+  }
+
+  return Object.entries(
+    counts
+  )
+    .sort(
+      (a, b) =>
+        b[1] - a[1]
+    )
+    .slice(0, 5)
+    .map(
+      ([error, count]) => ({
+        error,
+        count,
+      })
+    );
 }
 
 async function isUserInGroup(
@@ -1890,6 +2140,103 @@ async function getUserSwipeCount(
     );
 
   return Number(result.rows[0].count);
+}
+
+async function ensureFactSchedule(
+  userId,
+  swipeCount,
+  db = pool
+) {
+  const result =
+    await db.query(
+      `
+      SELECT fact_next_swipe
+      FROM users
+      WHERE id = $1
+      LIMIT 1
+      `,
+      [userId]
+    );
+
+  if (!result.rows.length) {
+    return null;
+  }
+
+  let next =
+    result.rows[0].fact_next_swipe;
+
+  if (
+    next == null
+  ) {
+    next =
+      nextFactSwipeTarget(
+        swipeCount
+      );
+
+    await db.query(
+      `
+      UPDATE users
+      SET fact_next_swipe = $2
+      WHERE id = $1
+      `,
+      [userId, next]
+    );
+  }
+
+  return Number(next);
+}
+
+async function bumpFactSchedule(
+  userId,
+  swipeCount,
+  db = pool
+) {
+  const next =
+    nextFactSwipeTarget(
+      swipeCount
+    );
+
+  await db.query(
+    `
+    UPDATE users
+    SET fact_next_swipe = $2
+    WHERE id = $1
+    `,
+    [userId, next]
+  );
+
+  return next;
+}
+
+async function pickUnseenFact(
+  userId,
+  db = pool
+) {
+  const result =
+    await db.query(
+      `
+      SELECT
+        f.id,
+        f.text,
+        f.image_key
+
+      FROM facts f
+
+      WHERE NOT EXISTS (
+        SELECT 1
+        FROM fact_votes v
+        WHERE v.fact_id = f.id
+          AND v.user_id = $1
+      )
+
+      ORDER BY random()
+
+      LIMIT 1
+      `,
+      [userId]
+    );
+
+  return result.rows[0] || null;
 }
 
 async function getCatSwipeStats(
@@ -2499,6 +2846,9 @@ app.get(
 
         cats,
 
+        maxCats:
+          MAX_CATS_PER_USER,
+
         votes:
           voteState,
 
@@ -3000,13 +3350,70 @@ app.get(
     res
   ) => {
     try {
-      const card =
-        await selectSwipeCard(
+      const swipeCount =
+        await getUserSwipeCount(
           req.user.id
         );
 
-      const swipeCount =
-        await getUserSwipeCount(
+      const factNext =
+        await ensureFactSchedule(
+          req.user.id,
+          swipeCount
+        );
+
+      if (
+        factNext != null &&
+        swipeCount >=
+          factNext
+      ) {
+        const fact =
+          await pickUnseenFact(
+            req.user.id
+          );
+
+        if (fact) {
+          return res.json({
+            type: "fact",
+
+            fact: {
+              id:
+                fact.id,
+
+              text:
+                fact.text,
+
+              imageUrl:
+                imageUrlForFact(
+                  fact
+                ),
+            },
+
+            question: {
+              key:
+                "fact_interesting",
+
+              text:
+                "Интересный факт?",
+            },
+
+            swipes: {
+              count:
+                swipeCount,
+
+              uploadUnlocked:
+                true,
+            },
+          });
+        }
+
+        await bumpFactSchedule(
+          req.user.id,
+          swipeCount
+        );
+      }
+
+      const card =
+        await selectSwipeCard(
           req.user.id
         );
 
@@ -3028,6 +3435,8 @@ app.get(
       }
 
       res.json({
+        type: "cat",
+
         cat: {
           id:
             card.cat.id,
@@ -3278,6 +3687,135 @@ app.post(
         .json({
           error:
             "SWIPE_ERROR",
+        });
+    }
+  }
+);
+
+app.post(
+  "/api/swipe/fact",
+  auth,
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const factId =
+        Number(
+          req.body.factId
+        );
+
+      const interesting =
+        req.body.answer ===
+          true ||
+        req.body.answer ===
+          "true" ||
+        req.body.answer ===
+          1 ||
+        req.body.answer ===
+          "1";
+
+      if (
+        !Number.isFinite(
+          factId
+        ) ||
+        factId <= 0
+      ) {
+        return res
+          .status(400)
+          .json({
+            error:
+              "INVALID_FACT",
+          });
+      }
+
+      const factResult =
+        await pool.query(
+          `
+          SELECT id
+          FROM facts
+          WHERE id = $1
+          LIMIT 1
+          `,
+          [factId]
+        );
+
+      if (
+        !factResult.rows.length
+      ) {
+        return res
+          .status(404)
+          .json({
+            error:
+              "FACT_NOT_FOUND",
+          });
+      }
+
+      await pool.query(
+        `
+        INSERT INTO fact_votes (
+          user_id,
+          fact_id,
+          interesting
+        )
+
+        VALUES (
+          $1,
+          $2,
+          $3
+        )
+
+        ON CONFLICT (
+          user_id,
+          fact_id
+        )
+
+        DO UPDATE SET
+          interesting =
+            EXCLUDED.interesting
+        `,
+        [
+          req.user.id,
+          factId,
+          interesting,
+        ]
+      );
+
+      const swipeCount =
+        await getUserSwipeCount(
+          req.user.id
+        );
+
+      await bumpFactSchedule(
+        req.user.id,
+        swipeCount
+      );
+
+      res.json({
+        success: true,
+
+        answer:
+          interesting,
+
+        swipes: {
+          count:
+            swipeCount,
+
+          uploadUnlocked:
+            true,
+        },
+      });
+    } catch (error) {
+      console.error(
+        "Fact swipe error:",
+        error
+      );
+
+      res
+        .status(500)
+        .json({
+          error:
+            "FACT_SWIPE_ERROR",
         });
     }
   }
@@ -3908,6 +4446,36 @@ app.post(
     res
   ) => {
     try {
+      const existing =
+        await pool.query(
+          `
+          SELECT COUNT(*)::int AS count
+          FROM cats
+          WHERE owner_id = $1
+            AND status IN (
+              'PENDING',
+              'APPROVED'
+            )
+          `,
+          [req.user.id]
+        );
+
+      if (
+        Number(
+          existing.rows[0].count
+        ) >= MAX_CATS_PER_USER
+      ) {
+        return res
+          .status(400)
+          .json({
+            error:
+              "CAT_LIMIT_REACHED",
+
+            max:
+              MAX_CATS_PER_USER,
+          });
+      }
+
       const name =
         String(
           req.body.name || ""
@@ -4270,6 +4838,79 @@ app.get(
     } catch (error) {
       console.error(
         "Image error:",
+        error
+      );
+
+      res
+        .sendStatus(500);
+    }
+  }
+);
+
+app.get(
+  "/api/fact-image/:id/:key",
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const result =
+        await pool.query(
+          `
+          SELECT
+            image_mime,
+            image_data
+
+          FROM facts
+
+          WHERE id =
+            $1
+
+            AND image_key =
+              $2
+
+          LIMIT 1
+          `,
+          [
+            req.params.id,
+            req.params.key,
+          ]
+        );
+
+      if (
+        !result.rows.length
+      ) {
+        return res
+          .sendStatus(404);
+      }
+
+      const row =
+        result.rows[0];
+
+      if (
+        !row.image_data
+      ) {
+        return res
+          .sendStatus(404);
+      }
+
+      res.setHeader(
+        "Content-Type",
+        row.image_mime ||
+          "image/jpeg"
+      );
+
+      res.setHeader(
+        "Cache-Control",
+        "public, max-age=86400"
+      );
+
+      res.send(
+        row.image_data
+      );
+    } catch (error) {
+      console.error(
+        "Fact image error:",
         error
       );
 
@@ -4753,6 +5394,352 @@ app.post(
 );
 
 /* =========================================================
+   ADMIN FACTS
+   ========================================================= */
+
+app.get(
+  "/api/admin/facts",
+  auth,
+  requireRole(
+    "MODERATOR",
+    "OWNER"
+  ),
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const result =
+        await pool.query(
+          `
+          SELECT
+            f.id,
+            f.text,
+            f.image_key,
+            f.created_at,
+
+            COUNT(v.id)::int AS votes,
+
+            COUNT(v.id) FILTER (
+              WHERE v.interesting = TRUE
+            )::int AS yes_count,
+
+            COUNT(v.id) FILTER (
+              WHERE v.interesting = FALSE
+            )::int AS no_count
+
+          FROM facts f
+
+          LEFT JOIN fact_votes v
+            ON v.fact_id = f.id
+
+          GROUP BY
+            f.id
+
+          ORDER BY
+            CASE
+              WHEN COUNT(v.id) = 0
+                THEN 1
+              ELSE 0
+            END,
+
+            (
+              COUNT(v.id) FILTER (
+                WHERE v.interesting = TRUE
+              )::float
+              /
+              NULLIF(COUNT(v.id), 0)
+            ) ASC NULLS LAST,
+
+            COUNT(v.id) DESC,
+
+            f.created_at DESC
+          `
+        );
+
+      res.json({
+        facts:
+          result.rows.map(
+            (row) => {
+              const votes =
+                Number(
+                  row.votes
+                );
+
+              const yes =
+                Number(
+                  row.yes_count
+                );
+
+              const no =
+                Number(
+                  row.no_count
+                );
+
+              return {
+                id:
+                  row.id,
+
+                text:
+                  row.text,
+
+                imageUrl:
+                  imageUrlForFact(
+                    row
+                  ),
+
+                votes,
+
+                yes,
+
+                no,
+
+                score:
+                  votes
+                    ? Math.round(
+                        (yes /
+                          votes) *
+                          100
+                      )
+                    : null,
+
+                createdAt:
+                  row.created_at,
+              };
+            }
+          ),
+      });
+    } catch (error) {
+      console.error(
+        "Admin facts error:",
+        error
+      );
+
+      res
+        .status(500)
+        .json({
+          error:
+            "ADMIN_FACTS_ERROR",
+        });
+    }
+  }
+);
+
+app.post(
+  "/api/admin/facts",
+  auth,
+  requireRole(
+    "MODERATOR",
+    "OWNER"
+  ),
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const text =
+        String(
+          req.body.text ||
+            ""
+        ).trim();
+
+      if (
+        text.length <
+          1 ||
+        text.length >
+          FACT_TEXT_MAX
+      ) {
+        return res
+          .status(400)
+          .json({
+            error:
+              "INVALID_FACT_TEXT",
+          });
+      }
+
+      const decoded =
+        decodeImageDataUrl(
+          req.body.imageData
+        );
+
+      if (!decoded) {
+        return res
+          .status(400)
+          .json({
+            error:
+              "INVALID_IMAGE",
+          });
+      }
+
+      const image =
+        await normalizeImage(
+          decoded.buffer
+        );
+
+      if (!image) {
+        return res
+          .status(400)
+          .json({
+            error:
+              "INVALID_IMAGE",
+          });
+      }
+
+      const imageKey =
+        crypto
+          .randomBytes(24)
+          .toString("hex");
+
+      const result =
+        await pool.query(
+          `
+          INSERT INTO facts (
+            text,
+            image_key,
+            image_mime,
+            image_data,
+            created_by
+          )
+
+          VALUES (
+            $1,
+            $2,
+            $3,
+            $4,
+            $5
+          )
+
+          RETURNING
+            id,
+            text,
+            image_key,
+            created_at
+          `,
+          [
+            text,
+            imageKey,
+            image.mime,
+            image.buffer,
+            req.user.id,
+          ]
+        );
+
+      const fact =
+        result.rows[0];
+
+      res
+        .status(201)
+        .json({
+          success: true,
+
+          fact: {
+            id:
+              fact.id,
+
+            text:
+              fact.text,
+
+            imageUrl:
+              imageUrlForFact(
+                fact
+              ),
+
+            votes: 0,
+            yes: 0,
+            no: 0,
+            score: null,
+
+            createdAt:
+              fact.created_at,
+          },
+        });
+    } catch (error) {
+      console.error(
+        "Admin fact create error:",
+        error
+      );
+
+      res
+        .status(500)
+        .json({
+          error:
+            "ADMIN_FACT_CREATE_ERROR",
+        });
+    }
+  }
+);
+
+app.delete(
+  "/api/admin/facts/:id",
+  auth,
+  requireRole(
+    "MODERATOR",
+    "OWNER"
+  ),
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const factId =
+        Number(
+          req.params.id
+        );
+
+      if (
+        !Number.isFinite(
+          factId
+        )
+      ) {
+        return res
+          .status(400)
+          .json({
+            error:
+              "INVALID_FACT",
+          });
+      }
+
+      const result =
+        await pool.query(
+          `
+          DELETE FROM facts
+          WHERE id = $1
+          RETURNING id
+          `,
+          [factId]
+        );
+
+      if (
+        !result.rows.length
+      ) {
+        return res
+          .status(404)
+          .json({
+            error:
+              "FACT_NOT_FOUND",
+          });
+      }
+
+      res.json({
+        success: true,
+      });
+    } catch (error) {
+      console.error(
+        "Admin fact delete error:",
+        error
+      );
+
+      res
+        .status(500)
+        .json({
+          error:
+            "ADMIN_FACT_DELETE_ERROR",
+        });
+    }
+  }
+);
+
+/* =========================================================
    MODERATION QUEUE
    ========================================================= */
 
@@ -4795,10 +5782,11 @@ app.post(
 
       let sent = 0;
       let failed = 0;
+      const errors = [];
 
       for (const user of result.rows) {
-        const ok =
-          await sendTelegramMessage(
+        const resultSend =
+          await sendTelegramMessageResult(
             user.telegram_user_id,
 
             `🐱 ТВОЙ кот еще незагружен
@@ -4807,13 +5795,19 @@ app.post(
 После модерации кот попадёт в свайпы, а в битвы — когда наберёт «да» в 8 разных опросах.`
           );
 
-        if (ok) {
+        if (resultSend.ok) {
           sent += 1;
         } else {
           failed += 1;
+          errors.push({
+            telegramUserId:
+              user.telegram_user_id,
+            error:
+              resultSend.error,
+          });
         }
 
-        await sleep(40);
+        await sleep(80);
       }
 
       res.json({
@@ -4822,6 +5816,12 @@ app.post(
           result.rows.length,
         sent,
         failed,
+        errors:
+          summarizeBroadcastErrors(
+            errors
+          ),
+        hint:
+          "Ошибки обычно у тех, кто не писал боту /start или заблокировал бота.",
       });
     } catch (error) {
       console.error(
@@ -4878,6 +5878,7 @@ app.post(
       let sent = 0;
       let failed = 0;
       let skipped = 0;
+      const errors = [];
 
       for (const user of result.rows) {
         const votes =
@@ -4898,8 +5899,8 @@ app.post(
           continue;
         }
 
-        const ok =
-          await sendTelegramMessage(
+        const resultSend =
+          await sendTelegramMessageResult(
             user.telegram_user_id,
 
             `⚔️ Хватит спать - у нас новые БИТВЫ!
@@ -4907,13 +5908,19 @@ app.post(
 Заходи в КОТОБОР и выбирай сильнейших. 🐈`
           );
 
-        if (ok) {
+        if (resultSend.ok) {
           sent += 1;
         } else {
           failed += 1;
+          errors.push({
+            telegramUserId:
+              user.telegram_user_id,
+            error:
+              resultSend.error,
+          });
         }
 
-        await sleep(40);
+        await sleep(80);
       }
 
       res.json({
@@ -4923,6 +5930,12 @@ app.post(
         sent,
         failed,
         skipped,
+        errors:
+          summarizeBroadcastErrors(
+            errors
+          ),
+        hint:
+          "Ошибки обычно у тех, кто не писал боту /start или заблокировал бота.",
       });
     } catch (error) {
       console.error(
@@ -5468,19 +6481,29 @@ app.get(
         await pool.query(
           `
           SELECT
-            id,
-            telegram_user_id,
-            username,
-            first_name,
-            last_name,
-            role,
-            status,
-            created_at
+            u.id,
+            u.telegram_user_id,
+            u.username,
+            u.first_name,
+            u.last_name,
+            u.role,
+            u.status,
+            u.created_at,
 
-          FROM users
+            (
+              SELECT COUNT(*)::int
+              FROM cats c
+              WHERE c.owner_id = u.id
+                AND c.status IN (
+                  'PENDING',
+                  'APPROVED'
+                )
+            ) AS cat_count
+
+          FROM users u
 
           ORDER BY
-            created_at DESC
+            u.created_at DESC
 
           LIMIT 500
           `
@@ -5488,7 +6511,28 @@ app.get(
 
       res.json({
         users:
-          result.rows,
+          result.rows.map(
+            (row) => ({
+              id: row.id,
+              telegram_user_id:
+                row.telegram_user_id,
+              username:
+                row.username,
+              first_name:
+                row.first_name,
+              last_name:
+                row.last_name,
+              role: row.role,
+              status: row.status,
+              created_at:
+                row.created_at,
+              catCount: Number(
+                row.cat_count || 0
+              ),
+              maxCats:
+                MAX_CATS_PER_USER,
+            })
+          ),
       });
     } catch (error) {
       console.error(
@@ -5501,6 +6545,130 @@ app.get(
         .json({
           error:
             "OWNER_USERS_ERROR",
+        });
+    }
+  }
+);
+
+app.get(
+  "/api/owner/users/:id/cats",
+  auth,
+  requireRole(
+    "OWNER",
+    "MODERATOR"
+  ),
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const userResult =
+        await pool.query(
+          `
+          SELECT
+            id,
+            telegram_user_id,
+            username,
+            first_name,
+            last_name,
+            role,
+            status
+          FROM users
+          WHERE id = $1
+          LIMIT 1
+          `,
+          [req.params.id]
+        );
+
+      if (
+        !userResult.rows.length
+      ) {
+        return res
+          .status(404)
+          .json({
+            error:
+              "USER_NOT_FOUND",
+          });
+      }
+
+      const user =
+        userResult.rows[0];
+
+      const catsResult =
+        await pool.query(
+          `
+          SELECT
+            id,
+            name,
+            status,
+            image_key,
+            rating,
+            battles,
+            wins,
+            losses,
+            created_at
+          FROM cats
+          WHERE owner_id = $1
+            AND status IN (
+              'PENDING',
+              'APPROVED',
+              'REJECTED',
+              'HIDDEN'
+            )
+          ORDER BY
+            created_at DESC
+          `,
+          [user.id]
+        );
+
+      res.json({
+        user: {
+          id: user.id,
+          telegram_user_id:
+            user.telegram_user_id,
+          username:
+            user.username,
+          first_name:
+            user.first_name,
+          last_name:
+            user.last_name,
+          role: user.role,
+          status: user.status,
+        },
+
+        cats:
+          catsResult.rows.map(
+            (cat) => ({
+              id: cat.id,
+              name: cat.name,
+              status: cat.status,
+              imageUrl:
+                imageUrlForCat(
+                  cat
+                ),
+              rating: cat.rating,
+              battles: cat.battles,
+              wins: cat.wins,
+              losses: cat.losses,
+              createdAt:
+                cat.created_at,
+            })
+          ),
+
+        maxCats:
+          MAX_CATS_PER_USER,
+      });
+    } catch (error) {
+      console.error(
+        "Owner user cats error:",
+        error
+      );
+
+      res
+        .status(500)
+        .json({
+          error:
+            "OWNER_USER_CATS_ERROR",
         });
     }
   }
