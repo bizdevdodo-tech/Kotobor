@@ -845,32 +845,54 @@
     }
 
     .swipe-title {
-      text-align: center;
-      margin: 8px 0 14px;
+      display: none;
     }
 
-    .swipe-title strong {
-      display: block;
-      font-size: 22px;
-      font-weight: 950;
-      line-height: 1.25;
-    }
-
-    .swipe-title span {
-      display: block;
-      margin-top: 6px;
-      color: var(--muted);
-      font-size: 13px;
+    .swipe-stage {
+      position: relative;
+      height:
+        calc(
+          100dvh
+          - var(--app-top-inset, 56px)
+          - 120px
+          - 76px
+          - env(safe-area-inset-bottom)
+        );
+      min-height: 420px;
+      touch-action: none;
+      user-select: none;
     }
 
     .swipe-card {
-      position: relative;
-      height: min(58vh, 460px);
+      position: absolute;
+      inset: 0;
       overflow: hidden;
       border-radius: 26px;
       background: #151515;
       border: 1px solid var(--line);
       box-shadow: var(--shadow);
+      will-change: transform;
+      transition: box-shadow .2s ease;
+    }
+
+    .swipe-card.dragging {
+      transition: none;
+    }
+
+    .swipe-card.fly-left,
+    .swipe-card.fly-right {
+      transition:
+        transform .28s ease,
+        opacity .28s ease;
+      opacity: 0;
+    }
+
+    .swipe-card.fly-left {
+      transform: translate(-130%, 20px) rotate(-18deg) !important;
+    }
+
+    .swipe-card.fly-right {
+      transform: translate(130%, 20px) rotate(18deg) !important;
     }
 
     .swipe-card img {
@@ -883,61 +905,101 @@
     .swipe-gradient {
       position: absolute;
       inset: auto 0 0;
-      height: 48%;
+      height: 42%;
       background:
         linear-gradient(
           to top,
           rgba(0,0,0,.92),
           transparent
         );
+      pointer-events: none;
+    }
+
+    .swipe-top {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      top: 14px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(11,12,16,.72);
+      backdrop-filter: blur(10px);
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .swipe-top strong {
+      display: block;
+      font-size: 20px;
+      font-weight: 950;
+      line-height: 1.25;
+    }
+
+    .swipe-top span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
     }
 
     .swipe-cat-name {
       position: absolute;
       left: 16px;
       right: 16px;
-      bottom: 18px;
-      font-size: 24px;
+      bottom: 52px;
+      font-size: 26px;
       font-weight: 950;
-    }
-
-    .swipe-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 16px;
-    }
-
-    .swipe-actions .btn {
-      margin: 0;
-      min-height: 56px;
-      font-size: 18px;
-    }
-
-    .btn-no {
-      background: rgba(255,67,85,.14);
-      color: #ff8b97;
-      border: 1px solid rgba(255,67,85,.28);
-    }
-
-    .btn-yes {
-      background:
-        linear-gradient(
-          135deg,
-          var(--accent),
-          var(--accent2)
-        );
-      color: #120d0a;
-      border: 0;
-      font-weight: 950;
+      pointer-events: none;
     }
 
     .swipe-progress {
-      margin-top: 12px;
-      text-align: center;
-      color: var(--muted);
-      font-size: 13px;
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 18px;
+      text-align: left;
+      color: rgba(255,255,255,.72);
+      font-size: 12px;
       font-weight: 800;
+      pointer-events: none;
+    }
+
+    .swipe-stamp {
+      position: absolute;
+      z-index: 5;
+      top: 28%;
+      padding: 8px 14px;
+      border: 4px solid;
+      border-radius: 12px;
+      font-size: 34px;
+      font-weight: 950;
+      letter-spacing: 1px;
+      opacity: 0;
+      pointer-events: none;
+      transform: rotate(-18deg);
+    }
+
+    .swipe-stamp-no {
+      left: 18px;
+      color: #ff4355;
+      border-color: #ff4355;
+      transform: rotate(-18deg);
+    }
+
+    .swipe-stamp-yes {
+      right: 18px;
+      color: #38d27a;
+      border-color: #38d27a;
+      transform: rotate(18deg);
+    }
+
+    .swipe-actions {
+      display: none;
+    }
+
+    .btn-no,
+    .btn-yes {
+      display: none;
     }
   </style>
 </head>
@@ -1019,34 +1081,33 @@
 
       <section id="page-swipe" class="page active">
 
-        <div class="swipe-title">
-          <strong id="swipeQuestion">
-            Загружаем вопрос…
-          </strong>
-          <span>Свайпай. Только позитив.</span>
-        </div>
-
         <div id="swipeLoading" class="loading">
           Ищем кота…
         </div>
 
-        <div id="swipeBox" class="hidden">
-          <div class="swipe-card">
-            <img id="swipeImage" alt="" />
+        <div id="swipeBox" class="swipe-stage hidden">
+          <div id="swipeCard" class="swipe-card">
+            <div id="swipeStampNo" class="swipe-stamp swipe-stamp-no">
+              НЕТ
+            </div>
+
+            <div id="swipeStampYes" class="swipe-stamp swipe-stamp-yes">
+              ДА
+            </div>
+
+            <img id="swipeImage" alt="" draggable="false" />
             <div class="swipe-gradient"></div>
+
+            <div class="swipe-top">
+              <strong id="swipeQuestion">
+                Загружаем вопрос…
+              </strong>
+              <span>← нет · да →</span>
+            </div>
+
             <div id="swipeCatName" class="swipe-cat-name"></div>
+            <div id="swipeProgress" class="swipe-progress"></div>
           </div>
-
-          <div class="swipe-actions">
-            <button id="swipeNo" class="btn btn-no" type="button">
-              Нет
-            </button>
-            <button id="swipeYes" class="btn btn-yes" type="button">
-              Да
-            </button>
-          </div>
-
-          <div id="swipeProgress" class="swipe-progress"></div>
         </div>
 
         <div id="swipeEmpty" class="card timer-box hidden">
@@ -1804,6 +1865,37 @@
         `⚡ ${value.remaining}`;
     }
 
+    function resetSwipeCard() {
+      const card =
+        document.getElementById(
+          "swipeCard"
+        );
+
+      if (!card) {
+        return;
+      }
+
+      card.classList.remove(
+        "dragging",
+        "fly-left",
+        "fly-right"
+      );
+
+      card.style.transform =
+        "";
+
+      card.style.opacity =
+        "1";
+
+      document.getElementById(
+        "swipeStampNo"
+      ).style.opacity = "0";
+
+      document.getElementById(
+        "swipeStampYes"
+      ).style.opacity = "0";
+    }
+
     async function loadSwipe() {
       const loading =
         document.getElementById(
@@ -1826,6 +1918,7 @@
 
       box.classList.add("hidden");
       empty.classList.add("hidden");
+      resetSwipeCard();
 
       try {
         const data =
@@ -1861,8 +1954,8 @@
           "swipeProgress"
         ).textContent =
           data.swipes.uploadUnlocked
-            ? `Свайпов: ${data.swipes.count} · загрузка кота открыта`
-            : `Свайпов: ${data.swipes.count} · до загрузки кота: ${left}`;
+            ? `Свайпов: ${data.swipes.count} · загрузка открыта`
+            : `Свайпов: ${data.swipes.count} · до загрузки: ${left}`;
 
         if (state.me?.swipes) {
           state.me.swipes =
@@ -1912,6 +2005,21 @@
 
       state.swipeBusy = true;
 
+      const card =
+        document.getElementById(
+          "swipeCard"
+        );
+
+      card.classList.remove(
+        "dragging"
+      );
+
+      card.classList.add(
+        yes
+          ? "fly-right"
+          : "fly-left"
+      );
+
       try {
         const data =
           await api(
@@ -1949,12 +2057,18 @@
           );
         }
 
-        await loadSwipe();
+        setTimeout(
+          () => {
+            loadSwipe();
+          },
+          220
+        );
 
       } catch (error) {
         console.error(error);
 
         state.swipeBusy = false;
+        resetSwipeCard();
 
         toast(
           "Свайп не сохранился"
@@ -1962,19 +2076,168 @@
       }
     }
 
-    document
-      .getElementById("swipeYes")
-      .addEventListener(
-        "click",
-        () => answerSwipe(true)
+    (function setupSwipeGestures() {
+      const card =
+        document.getElementById(
+          "swipeCard"
+        );
+
+      if (!card) {
+        return;
+      }
+
+      let startX = 0;
+      let startY = 0;
+      let dx = 0;
+      let dy = 0;
+      let active = false;
+      let locked = false;
+
+      function stampOpacity(value) {
+        const abs =
+          Math.min(
+            1,
+            Math.abs(value) / 110
+          );
+
+        document.getElementById(
+          "swipeStampYes"
+        ).style.opacity =
+          value > 0
+            ? String(abs)
+            : "0";
+
+        document.getElementById(
+          "swipeStampNo"
+        ).style.opacity =
+          value < 0
+            ? String(abs)
+            : "0";
+      }
+
+      function onStart(clientX, clientY) {
+        if (
+          state.swipeBusy ||
+          !state.swipe
+        ) {
+          return;
+        }
+
+        active = true;
+        locked = false;
+        startX = clientX;
+        startY = clientY;
+        dx = 0;
+        dy = 0;
+
+        card.classList.add(
+          "dragging"
+        );
+      }
+
+      function onMove(clientX, clientY) {
+        if (!active) {
+          return;
+        }
+
+        dx = clientX - startX;
+        dy = clientY - startY;
+
+        if (
+          !locked &&
+          Math.abs(dy) >
+            Math.abs(dx) &&
+          Math.abs(dy) > 12
+        ) {
+          active = false;
+          card.classList.remove(
+            "dragging"
+          );
+          card.style.transform =
+            "";
+          stampOpacity(0);
+          return;
+        }
+
+        if (
+          Math.abs(dx) > 8
+        ) {
+          locked = true;
+        }
+
+        const rotate =
+          dx / 18;
+
+        card.style.transform =
+          `translate(${dx}px, ${dy * 0.15}px) rotate(${rotate}deg)`;
+
+        stampOpacity(dx);
+      }
+
+      function onEnd() {
+        if (!active) {
+          return;
+        }
+
+        active = false;
+        card.classList.remove(
+          "dragging"
+        );
+
+        if (
+          Math.abs(dx) > 90
+        ) {
+          answerSwipe(dx > 0);
+          return;
+        }
+
+        card.style.transform =
+          "";
+
+        stampOpacity(0);
+      }
+
+      card.addEventListener(
+        "pointerdown",
+        (event) => {
+          if (
+            event.button &&
+            event.button !== 0
+          ) {
+            return;
+          }
+
+          card.setPointerCapture?.(
+            event.pointerId
+          );
+
+          onStart(
+            event.clientX,
+            event.clientY
+          );
+        }
       );
 
-    document
-      .getElementById("swipeNo")
-      .addEventListener(
-        "click",
-        () => answerSwipe(false)
+      card.addEventListener(
+        "pointermove",
+        (event) => {
+          onMove(
+            event.clientX,
+            event.clientY
+          );
+        }
       );
+
+      card.addEventListener(
+        "pointerup",
+        onEnd
+      );
+
+      card.addEventListener(
+        "pointercancel",
+        onEnd
+      );
+    })();
 
     async function loadBattle() {
       clearInterval(state.timer);
