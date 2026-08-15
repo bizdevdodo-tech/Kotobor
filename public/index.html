@@ -414,12 +414,19 @@
       margin-bottom: 14px;
     }
 
+    @media (min-width: 420px) {
+      .admin-tabs {
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+      }
+    }
+
     .admin-tab {
-      padding: 12px 10px;
+      padding: 12px 8px;
       border: 1px solid var(--line);
       border-radius: 14px;
       background: rgba(255,255,255,.04);
       color: var(--muted);
+      font-size: 12px;
       font-weight: 900;
     }
 
@@ -440,6 +447,14 @@
     .admin-user {
       padding: 14px;
       margin-bottom: 10px;
+      cursor: pointer;
+    }
+
+    .admin-user-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
     }
 
     .admin-user-name {
@@ -447,8 +462,117 @@
       font-weight: 900;
     }
 
+    .admin-user-dots {
+      display: flex;
+      gap: 5px;
+      flex-shrink: 0;
+      padding-top: 4px;
+      min-height: 10px;
+    }
+
+    .admin-user-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #3ecf6a;
+      box-shadow: 0 0 0 1px rgba(62, 207, 106, 0.35);
+    }
+
     .admin-user-meta {
       margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .admin-user-cats {
+      display: none;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    .admin-user.open .admin-user-cats {
+      display: block;
+    }
+
+    .admin-user-cat {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .admin-user-cat:last-child {
+      margin-bottom: 0;
+    }
+
+    .admin-user-cat img {
+      width: 56px;
+      height: 56px;
+      object-fit: cover;
+      border-radius: 12px;
+    }
+
+    .admin-user-cat-name {
+      font-weight: 900;
+      font-size: 14px;
+    }
+
+    .admin-user-cat-meta {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .broadcast-log {
+      margin-top: 12px;
+      max-height: 280px;
+      overflow: auto;
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(0,0,0,.28);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+
+    .broadcast-log:empty::before {
+      content: "Логи рассылок появятся здесь.";
+      color: rgba(255,255,255,.35);
+    }
+
+    .fact-form-preview {
+      width: 100%;
+      max-height: 180px;
+      object-fit: cover;
+      border-radius: 14px;
+      margin-top: 8px;
+    }
+
+    .fact-admin-card {
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      gap: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,255,255,.04);
+    }
+
+    .fact-admin-card img {
+      width: 72px;
+      height: 72px;
+      object-fit: cover;
+      border-radius: 12px;
+    }
+
+    .fact-admin-meta {
+      margin-top: 6px;
       color: var(--muted);
       font-size: 12px;
       line-height: 1.45;
@@ -1274,6 +1398,24 @@
           >
             Пользователи
           </button>
+
+          <button
+            id="adminTabNotify"
+            class="admin-tab"
+            type="button"
+            data-admin-tab="notify"
+          >
+            Уведомления
+          </button>
+
+          <button
+            id="adminTabFacts"
+            class="admin-tab"
+            type="button"
+            data-admin-tab="facts"
+          >
+            Факты
+          </button>
         </div>
 
         <div
@@ -1283,43 +1425,6 @@
 
           <div class="section-subtitle">
             Здесь появляются новые фотографии до выхода в свайпы.
-          </div>
-
-          <div
-            class="card"
-            style="padding:14px;margin-bottom:14px;"
-          >
-            <div style="font-weight:950;margin-bottom:10px;">
-              Рассылки
-            </div>
-
-            <button
-              id="broadcastNoCat"
-              class="btn btn-primary"
-              type="button"
-              style="margin:0 0 8px;"
-            >
-              1. Нет кота → «ТВОЙ кот еще незагружен»
-            </button>
-
-            <button
-              id="broadcastNewBattles"
-              class="btn"
-              type="button"
-              style="margin:0;"
-            >
-              2. Есть кот + энергия → «Хватит спать…»
-            </button>
-
-            <div
-              id="broadcastStatus"
-              style="
-                margin-top:10px;
-                color:var(--muted);
-                font-size:12px;
-                line-height:1.45;
-              "
-            ></div>
           </div>
 
           <div class="admin-toolbar">
@@ -1374,6 +1479,134 @@
           <div id="adminUsersList">
             <div class="loading">
               Загружаем пользователей…
+            </div>
+          </div>
+
+        </div>
+
+        <div
+          id="adminPanelNotify"
+          class="admin-panel"
+        >
+
+          <div class="section-subtitle">
+            Массовые уведомления в Telegram-бота.
+          </div>
+
+          <div class="card" style="padding:14px;">
+            <button
+              id="broadcastNoCat"
+              class="btn btn-primary"
+              type="button"
+              style="margin:0 0 8px;"
+            >
+              1. Нет кота → «ТВОЙ кот еще незагружен»
+            </button>
+
+            <button
+              id="broadcastNewBattles"
+              class="btn"
+              type="button"
+              style="margin:0;"
+            >
+              2. Есть кот + энергия → «Хватит спать…»
+            </button>
+
+            <div
+              id="broadcastStatus"
+              style="
+                margin-top:12px;
+                color:var(--muted);
+                font-size:12px;
+                line-height:1.5;
+              "
+            >
+              Выбери рассылку.
+            </div>
+
+            <div
+              id="broadcastLog"
+              class="broadcast-log"
+            ></div>
+          </div>
+
+        </div>
+
+        <div
+          id="adminPanelFacts"
+          class="admin-panel"
+        >
+
+          <div class="section-subtitle">
+            Карточки «Интересный факт?» в свайпах. Текст до 200 символов.
+          </div>
+
+          <div class="card" style="padding:14px;margin-bottom:12px;">
+            <div class="field" style="margin-bottom:10px;">
+              <label for="factText">Текст факта</label>
+              <textarea
+                id="factText"
+                class="input"
+                maxlength="200"
+                rows="3"
+                placeholder="Короткий интересный факт про котов…"
+                style="resize:vertical;min-height:72px;"
+              ></textarea>
+              <div
+                id="factTextCount"
+                style="margin-top:6px;color:var(--muted);font-size:12px;"
+              >
+                0 / 200
+              </div>
+            </div>
+
+            <div class="field" style="margin-bottom:10px;">
+              <label for="factImageInput">Картинка</label>
+              <input
+                id="factImageInput"
+                type="file"
+                accept="image/*"
+                style="width:100%;"
+              />
+              <img
+                id="factImagePreview"
+                class="fact-form-preview hidden"
+                alt=""
+              />
+            </div>
+
+            <button
+              id="factSubmit"
+              class="btn btn-primary"
+              type="button"
+              style="margin:0;"
+            >
+              Добавить факт
+            </button>
+
+            <div
+              id="factFormStatus"
+              style="margin-top:10px;color:var(--muted);font-size:12px;"
+            ></div>
+          </div>
+
+          <div class="admin-toolbar">
+            <div id="adminFactsCount" class="admin-count">
+              Загрузка…
+            </div>
+
+            <button
+              id="adminFactsRefresh"
+              class="btn admin-refresh"
+              type="button"
+            >
+              ↻ Обновить
+            </button>
+          </div>
+
+          <div id="adminFactsList">
+            <div class="loading">
+              Загружаем факты…
             </div>
           </div>
 
@@ -1495,7 +1728,8 @@
       swipe: null,
       swipeBusy: false,
       timer: null,
-      selectedImageData: null
+      selectedImageData: null,
+      factImageData: null
     };
 
     function showUnlockModal(
@@ -1786,11 +2020,17 @@
 
     async function runBroadcast(
       url,
-      button
+      button,
+      title
     ) {
       const status =
         document.getElementById(
           "broadcastStatus"
+        );
+
+      const log =
+        document.getElementById(
+          "broadcastLog"
         );
 
       if (
@@ -1804,6 +2044,11 @@
       button.disabled = true;
       status.textContent =
         "Отправляем…";
+
+      const startedAt =
+        new Date().toLocaleTimeString(
+          "ru-RU"
+        );
 
       try {
         const data =
@@ -1827,6 +2072,37 @@
               : ""
           );
 
+        const errorLines =
+          (
+            data.errors ||
+            []
+          )
+            .map(
+              (item) =>
+                `• ${item.error} — ${item.count}`
+            )
+            .join("\n");
+
+        const block = [
+          `[${startedAt}] ${title}`,
+          `Цель: ${data.target || 0}`,
+          `Отправлено: ${data.sent || 0}`,
+          data.skipped != null
+            ? `Пропущено: ${data.skipped}`
+            : null,
+          `Ошибок: ${data.failed || 0}`,
+          errorLines
+            ? `Причины:\n${errorLines}`
+            : "Причин ошибок нет.",
+          data.hint || null,
+          "—"
+        ]
+          .filter(Boolean)
+          .join("\n");
+
+        log.textContent =
+          `${block}\n${log.textContent || ""}`.trim();
+
         toast(
           "Рассылка завершена"
         );
@@ -1836,6 +2112,9 @@
 
         status.textContent =
           "Ошибка рассылки";
+
+        log.textContent =
+          `[${startedAt}] ${title}\nОшибка запроса: ${error.message || "API_ERROR"}\n—\n${log.textContent || ""}`.trim();
 
         toast(
           "Не удалось отправить"
@@ -1856,7 +2135,8 @@
         (event) => {
           runBroadcast(
             "/api/admin/broadcast/no-cat",
-            event.currentTarget
+            event.currentTarget,
+            "Нет кота"
           );
         }
       );
@@ -1870,7 +2150,8 @@
         (event) => {
           runBroadcast(
             "/api/admin/broadcast/new-battles",
-            event.currentTarget
+            event.currentTarget,
+            "Новые битвы"
           );
         }
       );
@@ -1902,8 +2183,16 @@
               "moderation"
             ) {
               await loadAdminQueue();
-            } else {
+            } else if (
+              tab ===
+              "users"
+            ) {
               await loadAdminUsers();
+            } else if (
+              tab ===
+              "facts"
+            ) {
+              await loadAdminFacts();
             }
           }
         );
@@ -1938,6 +2227,24 @@
         .classList.toggle(
           "active",
           tab === "users"
+        );
+
+      document
+        .getElementById(
+          "adminPanelNotify"
+        )
+        .classList.toggle(
+          "active",
+          tab === "notify"
+        );
+
+      document
+        .getElementById(
+          "adminPanelFacts"
+        )
+        .classList.toggle(
+          "active",
+          tab === "facts"
         );
     }
 
@@ -2050,25 +2357,36 @@
         state.swipe = data;
         state.swipeBusy = false;
 
+        const isFact =
+          data.type === "fact";
+
         document.getElementById(
           "swipeQuestion"
         ).textContent =
-          data.question.text;
+          isFact
+            ? data.fact.text
+            : data.question.text;
 
         document.getElementById(
           "swipeImage"
         ).src =
-          data.cat.imageUrl;
+          isFact
+            ? data.fact.imageUrl
+            : data.cat.imageUrl;
 
         document.getElementById(
           "swipeCatName"
         ).textContent =
-          data.cat.name;
+          isFact
+            ? "Интересный факт?"
+            : data.cat.name;
 
         document.getElementById(
           "swipeProgress"
         ).textContent =
-          `Свайпов: ${data.swipes.count}`;
+          isFact
+            ? `Факт · свайпов: ${data.swipes.count}`
+            : `Свайпов: ${data.swipes.count}`;
 
         if (state.me?.swipes) {
           state.me.swipes =
@@ -2134,23 +2452,41 @@
       );
 
       try {
+        const isFact =
+          state.swipe.type ===
+          "fact";
+
         const data =
           await api(
-            "/api/swipe",
+            isFact
+              ? "/api/swipe/fact"
+              : "/api/swipe",
             {
               method: "POST",
 
               body:
-                JSON.stringify({
-                  catId:
-                    state.swipe.cat.id,
+                JSON.stringify(
+                  isFact
+                    ? {
+                        factId:
+                          state.swipe
+                            .fact.id,
 
-                  questionKey:
-                    state.swipe
-                      .question.key,
+                        answer: yes
+                      }
+                    : {
+                        catId:
+                          state.swipe
+                            .cat.id,
 
-                  answer: yes
-                })
+                        questionKey:
+                          state.swipe
+                            .question
+                            .key,
+
+                        answer: yes
+                      }
+                )
             }
           );
 
@@ -2971,6 +3307,9 @@
             .join("")}
         </div>
 
+        ${
+          cats.length < 2
+            ? `
         <button
           id="addAnotherCat"
           class="btn btn-primary"
@@ -2978,6 +3317,13 @@
         >
           Добавить кота
         </button>
+        `
+            : `
+        <div class="section-subtitle" style="margin-top:4px;">
+          Максимум 2 кота на аккаунт.
+        </div>
+        `
+        }
       `;
 
       const addBtn =
@@ -2985,15 +3331,17 @@
           "addAnotherCat"
         );
 
-      addBtn.addEventListener(
-        "click",
-        () => {
-          renderAddCatForm(
-            container,
-            true
-          );
-        }
-      );
+      if (addBtn) {
+        addBtn.addEventListener(
+          "click",
+          () => {
+            renderAddCatForm(
+              container,
+              true
+            );
+          }
+        );
+      }
 
       container
         .querySelectorAll(
@@ -3528,9 +3876,18 @@
       } catch (error) {
         console.error(error);
 
-        toast(
-          "Ошибка загрузки фотографии"
-        );
+        if (
+          error.data?.error ===
+          "CAT_LIMIT_REACHED"
+        ) {
+          toast(
+            "Максимум 2 кота на аккаунт"
+          );
+        } else {
+          toast(
+            "Ошибка загрузки фотографии"
+          );
+        }
 
       } finally {
         button.disabled =
@@ -3622,12 +3979,31 @@
                       "без имени"
                     );
 
+              const catCount =
+                Math.min(
+                  Number(
+                    user.catCount ||
+                      0
+                  ),
+                  2
+                );
+
+              const dots =
+                Array.from(
+                  {
+                    length:
+                      catCount
+                  },
+                  () =>
+                    `<span class="admin-user-dot"></span>`
+                ).join("");
+
               const roleControls =
                 isOwner &&
                 user.role !==
                   "OWNER"
                   ? `
-                    <div class="admin-actions" style="margin-top:10px;">
+                    <div class="admin-actions" style="margin-top:10px;" onclick="event.stopPropagation()">
                       <button
                         class="btn"
                         onclick="setUserRole('${user.id}', 'USER')"
@@ -3654,7 +4030,7 @@
                           <button
                             class="btn btn-success"
                             style="margin-top:10px;"
-                            onclick="unbanUser('${user.id}')"
+                            onclick="event.stopPropagation(); unbanUser('${user.id}')"
                           >
                             Разбанить
                           </button>
@@ -3665,16 +4041,26 @@
                     <button
                       class="btn btn-danger"
                       style="margin-top:10px;"
-                      onclick="permanentBan('${user.id}')"
+                      onclick="event.stopPropagation(); permanentBan('${user.id}')"
                     >
                       ⛔ Бан
                     </button>
                   `;
 
               return `
-                <div class="card admin-user">
-                  <div class="admin-user-name">
-                    ${name}
+                <div
+                  class="card admin-user"
+                  data-user-id="${escapeAttr(user.id)}"
+                  onclick="toggleAdminUserCats(this)"
+                >
+                  <div class="admin-user-top">
+                    <div class="admin-user-name">
+                      ${name}
+                    </div>
+
+                    <div class="admin-user-dots" title="Котов: ${catCount}/2">
+                      ${dots}
+                    </div>
                   </div>
 
                   <div class="admin-user-meta">
@@ -3683,10 +4069,18 @@
                     Роль: ${escapeHtml(user.role)}
                     <br>
                     Статус: ${escapeHtml(user.status)}
+                    <br>
+                    Коты: ${catCount}/2 · нажми, чтобы открыть
                   </div>
 
                   ${roleControls}
                   ${banControls}
+
+                  <div class="admin-user-cats" data-loaded="0">
+                    <div class="loading">
+                      Загружаем котов…
+                    </div>
+                  </div>
                 </div>
               `;
             })
@@ -3702,6 +4096,104 @@
         `;
       }
     }
+
+    window.toggleAdminUserCats =
+      async function toggleAdminUserCats(
+        card
+      ) {
+        if (
+          !card ||
+          !card.dataset.userId
+        ) {
+          return;
+        }
+
+        const opening =
+          !card.classList.contains(
+            "open"
+          );
+
+        card.classList.toggle(
+          "open",
+          opening
+        );
+
+        if (!opening) {
+          return;
+        }
+
+        const box =
+          card.querySelector(
+            ".admin-user-cats"
+          );
+
+        if (
+          !box ||
+          box.dataset.loaded === "1"
+        ) {
+          return;
+        }
+
+        box.innerHTML = `
+          <div class="loading">
+            Загружаем котов…
+          </div>
+        `;
+
+        try {
+          const data =
+            await api(
+              `/api/owner/users/${card.dataset.userId}/cats`
+            );
+
+          const cats =
+            data.cats || [];
+
+          box.dataset.loaded =
+            "1";
+
+          if (!cats.length) {
+            box.innerHTML = `
+              <div class="admin-user-cat-meta">
+                У пользователя пока нет котов.
+              </div>
+            `;
+
+            return;
+          }
+
+          box.innerHTML =
+            cats
+              .map((cat) => `
+                <div class="admin-user-cat">
+                  <img
+                    src="${escapeAttr(cat.imageUrl)}"
+                    alt=""
+                  />
+                  <div>
+                    <div class="admin-user-cat-name">
+                      ${escapeHtml(cat.name)}
+                    </div>
+                    <div class="admin-user-cat-meta">
+                      ${escapeHtml(statusName(cat.status))}
+                      · рейтинг ${escapeHtml(cat.rating)}
+                      · бои ${escapeHtml(cat.battles)}
+                    </div>
+                  </div>
+                </div>
+              `)
+              .join("");
+
+        } catch (error) {
+          console.error(error);
+
+          box.innerHTML = `
+            <div class="admin-user-cat-meta">
+              Не удалось загрузить котов.
+            </div>
+          `;
+        }
+      };
 
     async function loadAdminQueue() {
       const el =
@@ -4004,6 +4496,319 @@
           );
         }
       };
+
+    async function loadAdminFacts() {
+      const el =
+        document.getElementById(
+          "adminFactsList"
+        );
+
+      const count =
+        document.getElementById(
+          "adminFactsCount"
+        );
+
+      count.textContent =
+        "Загрузка…";
+
+      el.innerHTML = `
+        <div class="loading">
+          Загружаем факты…
+        </div>
+      `;
+
+      try {
+        const data =
+          await api(
+            "/api/admin/facts"
+          );
+
+        const facts =
+          data.facts || [];
+
+        count.textContent =
+          `${facts.length} фактов`;
+
+        if (!facts.length) {
+          el.innerHTML = `
+            <div class="empty">
+              Фактов пока нет. Добавь первый выше.
+            </div>
+          `;
+
+          return;
+        }
+
+        el.innerHTML =
+          facts
+            .map((fact) => {
+              const score =
+                fact.score == null
+                  ? "нет оценок"
+                  : `${fact.score}% интересно`;
+
+              return `
+                <div class="fact-admin-card">
+                  <img src="${escapeAttr(fact.imageUrl)}" alt="" />
+                  <div>
+                    <div>${escapeHtml(fact.text)}</div>
+                    <div class="fact-admin-meta">
+                      ${score} · да ${fact.yes} · нет ${fact.no} · всего ${fact.votes}
+                    </div>
+                    <button
+                      class="btn"
+                      style="margin-top:8px;"
+                      type="button"
+                      onclick="deleteFact('${fact.id}')"
+                    >
+                      Удалить
+                    </button>
+                  </div>
+                </div>
+              `;
+            })
+            .join("");
+
+      } catch (error) {
+        console.error(error);
+
+        count.textContent =
+          "Ошибка";
+
+        el.innerHTML = `
+          <div class="empty">
+            Не удалось загрузить факты.
+          </div>
+        `;
+      }
+    }
+
+    window.deleteFact =
+      async function deleteFact(
+        id
+      ) {
+        if (
+          !confirm(
+            "Удалить этот факт?"
+          )
+        ) {
+          return;
+        }
+
+        try {
+          await api(
+            `/api/admin/facts/${id}`,
+            {
+              method: "DELETE"
+            }
+          );
+
+          toast("Факт удалён");
+          await loadAdminFacts();
+
+        } catch (error) {
+          console.error(error);
+          toast(
+            "Не удалось удалить"
+          );
+        }
+      };
+
+    (function setupFactAdminForm() {
+      const textEl =
+        document.getElementById(
+          "factText"
+        );
+
+      const countEl =
+        document.getElementById(
+          "factTextCount"
+        );
+
+      const input =
+        document.getElementById(
+          "factImageInput"
+        );
+
+      const preview =
+        document.getElementById(
+          "factImagePreview"
+        );
+
+      const status =
+        document.getElementById(
+          "factFormStatus"
+        );
+
+      if (
+        !textEl ||
+        !input
+      ) {
+        return;
+      }
+
+      textEl.addEventListener(
+        "input",
+        () => {
+          countEl.textContent =
+            `${textEl.value.length} / 200`;
+        }
+      );
+
+      input.addEventListener(
+        "change",
+        async () => {
+          const file =
+            input.files?.[0];
+
+          if (!file) {
+            return;
+          }
+
+          status.textContent =
+            "Обрабатываем картинку…";
+
+          try {
+            const imageData =
+              await prepareImage(
+                file
+              );
+
+            state.factImageData =
+              imageData;
+
+            preview.src =
+              imageData;
+
+            preview.classList.remove(
+              "hidden"
+            );
+
+            status.textContent =
+              "Картинка готова";
+
+          } catch (error) {
+            console.error(error);
+
+            state.factImageData =
+              null;
+
+            preview.classList.add(
+              "hidden"
+            );
+
+            status.textContent =
+              "";
+
+            toast(
+              "Не удалось прочитать картинку"
+            );
+          }
+        }
+      );
+
+      document
+        .getElementById(
+          "factSubmit"
+        )
+        .addEventListener(
+          "click",
+          async () => {
+            const text =
+              textEl.value.trim();
+
+            if (
+              text.length < 1 ||
+              text.length > 200
+            ) {
+              toast(
+                "Текст: 1–200 символов"
+              );
+              return;
+            }
+
+            if (
+              !state.factImageData
+            ) {
+              toast(
+                "Добавь картинку"
+              );
+              return;
+            }
+
+            const button =
+              document.getElementById(
+                "factSubmit"
+              );
+
+            button.disabled =
+              true;
+
+            status.textContent =
+              "Сохраняем…";
+
+            try {
+              await api(
+                "/api/admin/facts",
+                {
+                  method: "POST",
+
+                  body:
+                    JSON.stringify({
+                      text,
+                      imageData:
+                        state.factImageData
+                    })
+                }
+              );
+
+              textEl.value = "";
+              countEl.textContent =
+                "0 / 200";
+
+              state.factImageData =
+                null;
+
+              input.value = "";
+              preview.classList.add(
+                "hidden"
+              );
+
+              status.textContent =
+                "Факт добавлен";
+
+              toast(
+                "Факт добавлен"
+              );
+
+              await loadAdminFacts();
+
+            } catch (error) {
+              console.error(error);
+
+              status.textContent =
+                "Ошибка сохранения";
+
+              toast(
+                "Не удалось добавить факт"
+              );
+
+            } finally {
+              button.disabled =
+                false;
+            }
+          }
+        );
+
+      document
+        .getElementById(
+          "adminFactsRefresh"
+        )
+        .addEventListener(
+          "click",
+          loadAdminFacts
+        );
+    })();
 
     function escapeHtml(value) {
       return String(
