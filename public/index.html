@@ -49,7 +49,7 @@
 
     body {
       padding:
-        env(safe-area-inset-top)
+        0
         0
         env(safe-area-inset-bottom);
     }
@@ -79,7 +79,14 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 16px 12px;
+      gap: 10px;
+      padding:
+        calc(
+          var(--app-top-inset, 56px) +
+          10px
+        )
+        16px
+        12px;
       background:
         linear-gradient(
           to bottom,
@@ -94,11 +101,14 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      min-width: 0;
+      flex: 1;
     }
 
     .brand-icon {
       width: 42px;
       height: 42px;
+      flex-shrink: 0;
       border-radius: 14px;
       display: grid;
       place-items: center;
@@ -123,6 +133,7 @@
     }
 
     .votes-pill {
+      flex-shrink: 0;
       padding: 9px 13px;
       border-radius: 999px;
       background: var(--card2);
@@ -760,7 +771,10 @@
     .toast {
       position: fixed;
       z-index: 200;
-      top: calc(16px + env(safe-area-inset-top));
+      top: calc(
+        var(--app-top-inset, 56px) +
+        12px
+      );
       left: 50%;
       transform: translate(-50%, -130px);
       width: calc(100% - 30px);
@@ -776,12 +790,98 @@
     .toast.show {
       transform: translate(-50%, 0);
     }
+
+    .group-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      display: none;
+      place-items: center;
+      padding: 24px 18px;
+      background: rgba(0,0,0,.72);
+    }
+
+    .group-modal.show {
+      display: grid;
+    }
+
+    .group-card {
+      width: 100%;
+      max-width: 360px;
+      padding: 22px 18px 16px;
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(
+          180deg,
+          var(--card2),
+          var(--card)
+        );
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .group-emoji {
+      font-size: 52px;
+    }
+
+    .group-title {
+      margin-top: 8px;
+      font-size: 23px;
+      font-weight: 950;
+    }
+
+    .group-text {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .group-actions {
+      display: grid;
+      gap: 8px;
+      margin-top: 18px;
+    }
   </style>
 </head>
 
 <body>
 
   <div id="toast" class="toast"></div>
+
+  <div id="groupModal" class="group-modal">
+    <div class="group-card">
+      <div class="group-emoji">🐈‍⬛</div>
+
+      <div class="group-title">
+        Группа КОТОБОРА
+      </div>
+
+      <div class="group-text">
+        Вступай в группу — новости, обсуждения
+        и жизнь котов рядом.
+      </div>
+
+      <div class="group-actions">
+        <button
+          id="joinGroupBtn"
+          class="btn btn-primary"
+          type="button"
+        >
+          Вступить в группу
+        </button>
+
+        <button
+          id="skipGroupBtn"
+          class="btn"
+          type="button"
+        >
+          Позже
+        </button>
+      </div>
+    </div>
+  </div>
 
   <div class="app">
 
@@ -1073,6 +1173,38 @@
       window.Telegram?.WebApp ||
       null;
 
+    const GROUP_URL =
+      "https://t.me/+WZXWZGoN9bc4MThi";
+
+    function groupSeenKey(userId) {
+      return `kotobor_group_invite_v2_${userId || "anon"}`;
+    }
+
+    function applyTelegramInsets() {
+      const safeTop =
+        Number(
+          tg?.safeAreaInset?.top || 0
+        );
+
+      const contentTop =
+        Number(
+          tg?.contentSafeAreaInset?.top ||
+          0
+        );
+
+      let top =
+        safeTop + contentTop;
+
+      if (top < 48) {
+        top = 56;
+      }
+
+      document.documentElement.style.setProperty(
+        "--app-top-inset",
+        `${top}px`
+      );
+    }
+
     if (tg) {
       tg.ready();
       tg.expand();
@@ -1081,6 +1213,27 @@
         tg.setHeaderColor("#0b0c10");
         tg.setBackgroundColor("#0b0c10");
       } catch {}
+
+      applyTelegramInsets();
+
+      try {
+        tg.onEvent?.(
+          "safeAreaChanged",
+          applyTelegramInsets
+        );
+
+        tg.onEvent?.(
+          "contentSafeAreaChanged",
+          applyTelegramInsets
+        );
+
+        tg.onEvent?.(
+          "viewportChanged",
+          applyTelegramInsets
+        );
+      } catch {}
+    } else {
+      applyTelegramInsets();
     }
 
     const BOT_USERNAME =
@@ -1092,6 +1245,84 @@
       timer: null,
       selectedImageData: null
     };
+
+    function hideGroupInvite() {
+      document
+        .getElementById("groupModal")
+        .classList.remove("show");
+
+      const userId =
+        state.me?.user?.telegramUserId ||
+        state.me?.user?.id;
+
+      try {
+        localStorage.setItem(
+          groupSeenKey(userId),
+          "1"
+        );
+      } catch {}
+    }
+
+    function openGroupInvite() {
+      hideGroupInvite();
+
+      const url =
+        state.me?.group?.url ||
+        GROUP_URL;
+
+      if (tg?.openTelegramLink) {
+        tg.openTelegramLink(url);
+        return;
+      }
+
+      window.open(
+        url,
+        "_blank"
+      );
+    }
+
+    function maybeShowGroupInvite() {
+      const group =
+        state.me?.group;
+
+      if (
+        group?.member === true
+      ) {
+        return;
+      }
+
+      const userId =
+        state.me?.user?.telegramUserId ||
+        state.me?.user?.id;
+
+      try {
+        if (
+          localStorage.getItem(
+            groupSeenKey(userId)
+          )
+        ) {
+          return;
+        }
+      } catch {}
+
+      document
+        .getElementById("groupModal")
+        .classList.add("show");
+    }
+
+    document
+      .getElementById("joinGroupBtn")
+      .addEventListener(
+        "click",
+        openGroupInvite
+      );
+
+    document
+      .getElementById("skipGroupBtn")
+      .addEventListener(
+        "click",
+        hideGroupInvite
+      );
 
     async function api(url, options = {}) {
       const headers = {
@@ -1895,11 +2126,19 @@
         await loadMe();
 
         const cats =
-          state.me.cats ||
           (
-            state.me.cat
-              ? [state.me.cat]
-              : []
+            state.me.cats ||
+            (
+              state.me.cat
+                ? [state.me.cat]
+                : []
+            )
+          ).filter(
+            (item) =>
+              item.status ===
+                "PENDING" ||
+              item.status ===
+                "APPROVED"
           );
 
         if (!cats.length) {
@@ -2061,17 +2300,6 @@
         `;
       }
 
-      if (cat.status === "REJECTED") {
-        extra = `
-          <div class="card" style="margin-top:14px;padding:18px;">
-            <strong>Фото отклонено</strong>
-            <div style="margin-top:7px;color:var(--muted);line-height:1.45;">
-              Можно добавить другого кота или другое фото.
-            </div>
-          </div>
-        `;
-      }
-
       if (
         cat.status === "APPROVED" &&
         Number(cat.calibration_battles) < 20
@@ -2159,6 +2387,15 @@
         </div>
 
         ${extra}
+
+        <button
+          id="deleteCatBtn"
+          class="btn btn-danger"
+          type="button"
+          style="margin-top:14px;"
+        >
+          Удалить кота
+        </button>
       `;
 
       document
@@ -2166,6 +2403,45 @@
         .addEventListener(
           "click",
           () => loadMyCat()
+        );
+
+      document
+        .getElementById(
+          "deleteCatBtn"
+        )
+        .addEventListener(
+          "click",
+          async () => {
+            if (
+              !confirm(
+                `Удалить кота «${cat.name}» навсегда?`
+              )
+            ) {
+              return;
+            }
+
+            try {
+              await api(
+                `/api/cats/${cat.id}/delete`,
+                {
+                  method: "POST"
+                }
+              );
+
+              toast(
+                "Кот удалён"
+              );
+
+              await loadMyCat();
+
+            } catch (error) {
+              console.error(error);
+
+              toast(
+                "Не удалось удалить кота"
+              );
+            }
+          }
         );
     }
 
@@ -2965,6 +3241,7 @@
       try {
         await loadMe();
         await loadBattle();
+        maybeShowGroupInvite();
 
       } catch (error) {
         console.error(error);
