@@ -82,11 +82,11 @@
       gap: 10px;
       padding:
         calc(
-          var(--app-top-inset, 56px) +
+          var(--app-top-inset, 0px) +
           10px
         )
         16px
-        12px;
+        10px;
       background:
         linear-gradient(
           to bottom,
@@ -772,8 +772,8 @@
       position: fixed;
       z-index: 200;
       top: calc(
-        var(--app-top-inset, 56px) +
-        12px
+        var(--app-top-inset, 0px) +
+        10px
       );
       left: 50%;
       transform: translate(-50%, -130px);
@@ -853,8 +853,8 @@
       height:
         calc(
           100dvh
-          - var(--app-top-inset, 56px)
-          - 120px
+          - var(--app-top-inset, 0px)
+          - 88px
           - 76px
           - env(safe-area-inset-bottom)
         );
@@ -946,7 +946,7 @@
       position: absolute;
       left: 16px;
       right: 16px;
-      bottom: 52px;
+      bottom: 40px;
       font-size: 26px;
       font-weight: 950;
       pointer-events: none;
@@ -956,7 +956,7 @@
       position: absolute;
       left: 16px;
       right: 16px;
-      bottom: 18px;
+      bottom: 14px;
       text-align: left;
       color: rgba(255,255,255,.72);
       font-size: 12px;
@@ -1282,7 +1282,44 @@
         >
 
           <div class="section-subtitle">
-            Здесь появляются новые фотографии до выхода в битвы.
+            Здесь появляются новые фотографии до выхода в свайпы.
+          </div>
+
+          <div
+            class="card"
+            style="padding:14px;margin-bottom:14px;"
+          >
+            <div style="font-weight:950;margin-bottom:10px;">
+              Рассылки
+            </div>
+
+            <button
+              id="broadcastNoCat"
+              class="btn btn-primary"
+              type="button"
+              style="margin:0 0 8px;"
+            >
+              1. Нет кота → «ТВОЙ кот еще незагружен»
+            </button>
+
+            <button
+              id="broadcastNewBattles"
+              class="btn"
+              type="button"
+              style="margin:0;"
+            >
+              2. Есть кот + энергия → «Хватит спать…»
+            </button>
+
+            <div
+              id="broadcastStatus"
+              style="
+                margin-top:10px;
+                color:var(--muted);
+                font-size:12px;
+                line-height:1.45;
+              "
+            ></div>
           </div>
 
           <div class="admin-toolbar">
@@ -1399,23 +1436,18 @@
     }
 
     function applyTelegramInsets() {
-      const safeTop =
-        Number(
-          tg?.safeAreaInset?.top || 0
-        );
-
       const contentTop =
         Number(
           tg?.contentSafeAreaInset?.top ||
           0
         );
 
-      let top =
-        safeTop + contentTop;
-
-      if (top < 48) {
-        top = 56;
-      }
+      // Только отступ под кнопки Telegram поверх WebView.
+      // Не форсируем 56px — иначе шапка уезжает вниз.
+      const top =
+        contentTop > 0
+          ? contentTop
+          : 0;
 
       document.documentElement.style.setProperty(
         "--app-top-inset",
@@ -1752,6 +1784,97 @@
         loadAdminQueue
       );
 
+    async function runBroadcast(
+      url,
+      button
+    ) {
+      const status =
+        document.getElementById(
+          "broadcastStatus"
+        );
+
+      if (
+        !confirm(
+          "Отправить рассылку сейчас?"
+        )
+      ) {
+        return;
+      }
+
+      button.disabled = true;
+      status.textContent =
+        "Отправляем…";
+
+      try {
+        const data =
+          await api(
+            url,
+            {
+              method: "POST"
+            }
+          );
+
+        status.textContent =
+          `Готово: отправлено ${data.sent}` +
+          (
+            data.skipped
+              ? `, пропущено ${data.skipped}`
+              : ""
+          ) +
+          (
+            data.failed
+              ? `, ошибок ${data.failed}`
+              : ""
+          );
+
+        toast(
+          "Рассылка завершена"
+        );
+
+      } catch (error) {
+        console.error(error);
+
+        status.textContent =
+          "Ошибка рассылки";
+
+        toast(
+          "Не удалось отправить"
+        );
+
+      } finally {
+        button.disabled =
+          false;
+      }
+    }
+
+    document
+      .getElementById(
+        "broadcastNoCat"
+      )
+      .addEventListener(
+        "click",
+        (event) => {
+          runBroadcast(
+            "/api/admin/broadcast/no-cat",
+            event.currentTarget
+          );
+        }
+      );
+
+    document
+      .getElementById(
+        "broadcastNewBattles"
+      )
+      .addEventListener(
+        "click",
+        (event) => {
+          runBroadcast(
+            "/api/admin/broadcast/new-battles",
+            event.currentTarget
+          );
+        }
+      );
+
     document
       .getElementById(
         "adminUsersRefresh"
@@ -1942,20 +2065,10 @@
         ).textContent =
           data.cat.name;
 
-        const left =
-          Math.max(
-            0,
-            (data.swipes.uploadUnlockAt ||
-              20) -
-              (data.swipes.count || 0)
-          );
-
         document.getElementById(
           "swipeProgress"
         ).textContent =
-          data.swipes.uploadUnlocked
-            ? `Свайпов: ${data.swipes.count} · загрузка открыта`
-            : `Свайпов: ${data.swipes.count} · до загрузки: ${left}`;
+          `Свайпов: ${data.swipes.count}`;
 
         if (state.me?.swipes) {
           state.me.swipes =
@@ -2044,17 +2157,6 @@
         if (state.me) {
           state.me.swipes =
             data.swipes;
-        }
-
-        if (
-          data.swipes
-            ?.uploadUnlockedNow
-        ) {
-          showUnlockModal(
-            "🎉",
-            "Теперь ты можешь загрузить своего кота",
-            "Открой «Мои коты» и отправь фото на модерацию. После одобрения кот попадёт в свайпы."
-          );
         }
 
         setTimeout(
@@ -2781,36 +2883,6 @@
           );
 
         if (!cats.length) {
-          if (
-            !state.me?.swipes
-              ?.uploadUnlocked
-          ) {
-            const left =
-              Math.max(
-                0,
-                (state.me?.swipes
-                  ?.uploadUnlockAt ||
-                  20) -
-                  (state.me?.swipes
-                    ?.count || 0)
-              );
-
-            container.innerHTML = `
-              <div class="card" style="padding:18px;text-align:center;">
-                <div style="font-size:52px;">🔒</div>
-                <div style="margin-top:8px;font-size:22px;font-weight:950;">
-                  Загрузка пока закрыта
-                </div>
-                <div style="margin-top:8px;color:var(--muted);line-height:1.5;">
-                  Сделай ещё ${left} свайпов —
-                  и сможешь добавить своего кота.
-                </div>
-              </div>
-            `;
-
-            return;
-          }
-
           renderAddCatForm(
             container
           );
@@ -2913,24 +2985,15 @@
           "addAnotherCat"
         );
 
-      if (
-        !state.me?.swipes
-          ?.uploadUnlocked
-      ) {
-        addBtn.disabled = true;
-        addBtn.textContent =
-          "Сначала 20 свайпов";
-      } else {
-        addBtn.addEventListener(
-          "click",
-          () => {
-            renderAddCatForm(
-              container,
-              true
-            );
-          }
-        );
-      }
+      addBtn.addEventListener(
+        "click",
+        () => {
+          renderAddCatForm(
+            container,
+            true
+          );
+        }
+      );
 
       container
         .querySelectorAll(
@@ -3466,10 +3529,7 @@
         console.error(error);
 
         toast(
-          error.data?.error ===
-            "UPLOAD_LOCKED"
-            ? "Сначала сделай 20 свайпов"
-            : "Ошибка загрузки фотографии"
+          "Ошибка загрузки фотографии"
         );
 
       } finally {
@@ -3965,34 +4025,6 @@
         await loadMe();
         await loadSwipe();
         maybeShowGroupInvite();
-
-        if (
-          state.me?.swipes
-            ?.uploadUnlocked &&
-          !localStorage.getItem(
-            "kotobor_upload_unlock_seen"
-          )
-        ) {
-          try {
-            localStorage.setItem(
-              "kotobor_upload_unlock_seen",
-              "1"
-            );
-          } catch {}
-
-          if (
-            !(
-              state.me.cats &&
-              state.me.cats.length
-            )
-          ) {
-            showUnlockModal(
-              "🎉",
-              "Теперь ты можешь загрузить своего кота",
-              "Открой «Мои коты» и отправь фото на модерацию."
-            );
-          }
-        }
 
         const unlockedCat =
           (
