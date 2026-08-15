@@ -53,6 +53,94 @@ const BASE_LIMIT = 10;
 const CAT_LIMIT = 20;
 const SHARE_BONUS = 5;
 const REFERRALS_FOR_UNLIMITED = 10;
+const SWIPE_UPLOAD_UNLOCK = 20;
+const SWIPE_BATTLE_UNLOCK = 8;
+const SWIPE_PRIOR_A = 1;
+const SWIPE_PRIOR_B = 1;
+
+const SWIPE_QUESTIONS = [
+  { key: "cool", text: "Этот кот крутой?" },
+  { key: "funny", text: "Этот кот весёлый?" },
+  { key: "hilarious", text: "Этот кот смешной?" },
+  { key: "fashion", text: "Этот кот модный?" },
+  { key: "beautiful", text: "Этот кот красивый?" },
+  { key: "cute", text: "Этот кот милый?" },
+  { key: "charming", text: "Этот кот обаятельный?" },
+  { key: "smart", text: "Этот кот умный?" },
+  { key: "brave", text: "Этот кот смелый?" },
+  { key: "kind", text: "Этот кот добрый?" },
+  { key: "fluffy", text: "Этот кот пушистый?" },
+  { key: "elegant", text: "Этот кот элегантный?" },
+  { key: "stylish", text: "Этот кот стильный?" },
+  { key: "sweet", text: "Этот кот ласковый?" },
+  { key: "playful", text: "Этот кот игривый?" },
+  { key: "photogenic", text: "Этот кот фотогеничный?" },
+  { key: "unique", text: "Этот кот особенный?" },
+  { key: "royal", text: "Этот кот царственный?" },
+  { key: "cozy", text: "Этот кот уютный?" },
+  { key: "sunny", text: "Этот кот солнечный?" },
+  { key: "happy", text: "Этот кот счастливый?" },
+  { key: "friendly", text: "Этот кот дружелюбный?" },
+  { key: "gentle", text: "Этот кот нежный?" },
+  { key: "proud", text: "Этот кот гордый?" },
+  { key: "magical", text: "Этот кот волшебный?" },
+  { key: "bright", text: "Этот кот яркий?" },
+  { key: "soft", text: "Этот кот мягкий?" },
+  { key: "noble", text: "Этот кот благородный?" },
+  { key: "lovely", text: "Этот кот очаровательный?" },
+  { key: "adorable", text: "Этот кот прелестный?" },
+  { key: "confident", text: "Этот кот уверенный?" },
+  { key: "graceful", text: "Этот кот грациозный?" },
+  { key: "curious", text: "Этот кот любопытный?" },
+  { key: "calm", text: "Этот кот спокойный?" },
+  { key: "energetic", text: "Этот кот энергичный?" },
+  { key: "cozyface", text: "У этого кота уютная мордашка?" },
+  { key: "smile", text: "Этот кот умеет улыбаться глазами?" },
+  { key: "star", text: "Этот кот как звезда?" },
+  { key: "model", text: "Этот кот как модель?" },
+  { key: "hero", text: "Этот кот герой?" },
+  { key: "legend", text: "Этот кот легендарный?" },
+  { key: "perfect", text: "Этот кот идеальный?" },
+  { key: "dreamy", text: "Этот кот мечтательный?" },
+  { key: "warm", text: "Этот кот тёплый душой?" },
+  { key: "pure", text: "Этот кот чистый лучик?" },
+  { key: "joy", text: "Этот кот приносит радость?" },
+  { key: "peace", text: "С этим котом спокойно на душе?" },
+  { key: "wow", text: "Этот кот вызывает вау?" },
+  { key: "heart", text: "Этот кот берёт за сердце?" },
+  { key: "hug", text: "Этого кота хочется обнять?" },
+  { key: "home", text: "Этот кот как родной?" },
+  { key: "vibes", text: "У этого кота крутая атмосфера?" },
+  { key: "glow", text: "Этот кот будто светится?" },
+  { key: "boss", text: "Этот кот главный по вайбу?" },
+  { key: "artist", text: "Этот кот творческий?" },
+  { key: "zen", text: "Этот кот дзен?" },
+  { key: "spark", text: "В этом коте есть искра?" },
+  { key: "angel", text: "Этот кот ангельский?" },
+  { key: "treasure", text: "Этот кот настоящее сокровище?" },
+  { key: "winner", text: "Этот кот победитель?" },
+  { key: "charm2", text: "У этого кота сильный шарм?" },
+  { key: "look", text: "У этого кота крутой взгляд?" },
+  { key: "pose", text: "Этот кот красиво позирует?" },
+  { key: "fur", text: "У этого кота шикарная шёрстка?" },
+  { key: "eyes", text: "У этого кота красивые глаза?" },
+  { key: "whiskers", text: "У этого кота идеальные усы?" },
+  { key: "ears", text: "У этого кота милые ушки?" },
+  { key: "paws", text: "У этого кота очаровательные лапки?" },
+  { key: "tail", text: "У этого кота красивый хвост?" },
+  { key: "profile", text: "У этого кота красивый профиль?" },
+  { key: "mood", text: "У этого кота классное настроение?" },
+  { key: "aura", text: "У этого кота добрая аура?" },
+  { key: "presence", text: "Этот кот умеет заходить в кадр?" },
+  { key: "icon", text: "Этот кот уже икона стиля?" },
+  { key: "favorite", text: "Этого кота хочется добавить в любимчики?" },
+  { key: "again", text: "Этого кота хочется увидеть ещё?" },
+  { key: "share", text: "Этим котом хочется поделиться?" },
+  { key: "smile2", text: "Этот кот поднимает настроение?" },
+  { key: "best", text: "Этот кот сегодня лучший?" },
+  { key: "yes", text: "Этот кот заслуживает лайк?" }
+];
+
 
 const MAX_IMAGE_BYTES =
   6 * 1024 * 1024;
@@ -499,6 +587,65 @@ async function initDatabase() {
       ADD COLUMN IF NOT EXISTS
         energy_notified_at
         TIMESTAMPTZ;
+
+    CREATE TABLE IF NOT EXISTS swipes (
+      id BIGSERIAL PRIMARY KEY,
+
+      user_id
+        BIGINT
+        NOT NULL
+        REFERENCES users(id),
+
+      cat_id
+        BIGINT
+        NOT NULL
+        REFERENCES cats(id),
+
+      question_key
+        TEXT
+        NOT NULL,
+
+      answer
+        BOOLEAN
+        NOT NULL,
+
+      created_at
+        TIMESTAMPTZ
+        NOT NULL
+        DEFAULT NOW()
+    );
+
+    CREATE INDEX IF NOT EXISTS
+      idx_swipes_user
+      ON swipes(user_id);
+
+    CREATE INDEX IF NOT EXISTS
+      idx_swipes_cat
+      ON swipes(cat_id);
+
+    CREATE INDEX IF NOT EXISTS
+      idx_swipes_user_pair
+      ON swipes(
+        user_id,
+        cat_id,
+        question_key
+      );
+
+    CREATE INDEX IF NOT EXISTS
+      idx_swipes_cat_yes
+      ON swipes(cat_id, question_key)
+      WHERE answer = TRUE;
+
+    ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS
+        upload_unlock_notified_at
+        TIMESTAMPTZ;
+
+    ALTER TABLE cats
+      ADD COLUMN IF NOT EXISTS
+        battle_unlock_notified_at
+        TIMESTAMPTZ;
+
   `);
 
   console.log(
@@ -1429,7 +1576,9 @@ async function handleTelegramStart(
 
 У тебя есть 10 голосов каждые 5 часов.
 
-Загрузишь своего кота — после одобрения модератором лимит станет 20 голосов каждые 5 часов.
+Сначала свайпай котов в ленте. После 20 свайпов можно загрузить своего кота.
+
+Загрузишь кота — после модерации он попадёт в свайпы. Наберёт «да» в 8 разных опросах — откроются битвы.
 
 Выбирай внимательно. Коты всё запомнят.`;
 
@@ -1644,6 +1793,159 @@ async function startTelegramBot() {
       await sleep(3000);
     }
   }
+}
+
+
+function swipeScore(yesCount, totalCount) {
+  return (
+    (Number(yesCount || 0) + SWIPE_PRIOR_A) /
+    (Number(totalCount || 0) + SWIPE_PRIOR_A + SWIPE_PRIOR_B)
+  );
+}
+
+function questionByKey(key) {
+  return (
+    SWIPE_QUESTIONS.find(
+      (item) => item.key === key
+    ) || null
+  );
+}
+
+async function getUserSwipeCount(
+  userId,
+  db = pool
+) {
+  const result =
+    await db.query(
+      `
+      SELECT COUNT(*)::int AS count
+      FROM swipes
+      WHERE user_id = $1
+      `,
+      [userId]
+    );
+
+  return Number(result.rows[0].count);
+}
+
+async function getCatSwipeStats(
+  catId,
+  db = pool
+) {
+  const result =
+    await db.query(
+      `
+      SELECT
+        COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE answer = TRUE)::int AS yes_count,
+        COUNT(DISTINCT question_key) FILTER (WHERE answer = TRUE)::int AS distinct_yes
+      FROM swipes
+      WHERE cat_id = $1
+      `,
+      [catId]
+    );
+
+  const row = result.rows[0];
+  const total = Number(row.total);
+  const yesCount = Number(row.yes_count);
+  const distinctYes = Number(row.distinct_yes);
+
+  return {
+    total,
+    yesCount,
+    distinctYes,
+    score: swipeScore(yesCount, total),
+    battleEligible:
+      distinctYes >= SWIPE_BATTLE_UNLOCK,
+  };
+}
+
+async function isCatBattleEligible(
+  catId,
+  db = pool
+) {
+  const stats =
+    await getCatSwipeStats(
+      catId,
+      db
+    );
+
+  return stats.battleEligible;
+}
+
+async function selectSwipeCard(
+  userId
+) {
+  const catsResult =
+    await pool.query(
+      `
+      SELECT *
+      FROM cats
+      WHERE status = 'APPROVED'
+        AND owner_id <> $1
+      ORDER BY random()
+      LIMIT 150
+      `,
+      [userId]
+    );
+
+  const cats = catsResult.rows;
+
+  if (!cats.length) {
+    return null;
+  }
+
+  const seenResult =
+    await pool.query(
+      `
+      SELECT cat_id, question_key
+      FROM swipes
+      WHERE user_id = $1
+      `,
+      [userId]
+    );
+
+  const seen = new Set(
+    seenResult.rows.map(
+      (row) => `${row.cat_id}:${row.question_key}`
+    )
+  );
+
+  const freshCats = cats.filter(
+    (cat) => Number(cat.calibration_battles || 0) < 20
+  );
+
+  const poolCats =
+    Math.random() < 0.3 && freshCats.length
+      ? freshCats
+      : cats;
+
+  for (let i = 0; i < 200; i++) {
+    const cat =
+      poolCats[
+        Math.floor(Math.random() * poolCats.length)
+      ];
+
+    const question =
+      SWIPE_QUESTIONS[
+        Math.floor(Math.random() * SWIPE_QUESTIONS.length)
+      ];
+
+    const key = `${cat.id}:${question.key}`;
+
+    if (!seen.has(key)) {
+      return { cat, question, recycled: false };
+    }
+  }
+
+  const cat =
+    cats[Math.floor(Math.random() * cats.length)];
+  const question =
+    SWIPE_QUESTIONS[
+      Math.floor(Math.random() * SWIPE_QUESTIONS.length)
+    ];
+
+  return { cat, question, recycled: true };
 }
 
 /* =========================================================
@@ -1944,22 +2246,41 @@ app.get(
         );
 
       const cats =
-        catsResult.rows.map(
-          (row) => {
-            const cat = {
-              ...row,
+        await Promise.all(
+          catsResult.rows.map(
+            async (row) => {
+              const stats =
+                await getCatSwipeStats(
+                  row.id
+                );
 
-              image_url:
-                imageUrlForCat(
-                  row
-                ),
-            };
+              const cat = {
+                ...row,
 
-            delete cat.image_data;
-            delete cat.image_key;
+                image_url:
+                  imageUrlForCat(
+                    row
+                  ),
 
-            return cat;
-          }
+                swipeScore:
+                  Math.round(
+                    stats.score *
+                      1000
+                  ) / 10,
+
+                distinctYes:
+                  stats.distinctYes,
+
+                battleEligible:
+                  stats.battleEligible,
+              };
+
+              delete cat.image_data;
+              delete cat.image_key;
+
+              return cat;
+            }
+          )
         );
 
       const cat =
@@ -1968,6 +2289,11 @@ app.get(
       const voteState =
         await getVoteState(
           req.user
+        );
+
+      const swipeCount =
+        await getUserSwipeCount(
+          req.user.id
         );
 
       const referrals =
@@ -2005,6 +2331,24 @@ app.get(
 
         votes:
           voteState,
+
+        swipes: {
+          count:
+            swipeCount,
+
+          uploadUnlocked:
+            swipeCount >=
+            SWIPE_UPLOAD_UNLOCK,
+
+          uploadUnlockAt:
+            SWIPE_UPLOAD_UNLOCK,
+
+          battleUnlockAt:
+            SWIPE_BATTLE_UNLOCK,
+
+          questions:
+            SWIPE_QUESTIONS.length,
+        },
 
         referrals: {
           confirmed:
@@ -2229,6 +2573,13 @@ async function selectBattlePair(
 
         AND owner_id <>
           $1
+
+        AND (
+          SELECT COUNT(DISTINCT question_key)
+          FROM swipes s
+          WHERE s.cat_id = cats.id
+            AND s.answer = TRUE
+        ) >= 8
 
       ORDER BY
         random()
@@ -2470,6 +2821,353 @@ async function selectBattlePair(
 
   return null;
 }
+
+/* =========================================================
+   SWIPE (TINDER)
+   ========================================================= */
+
+app.get(
+  "/api/swipe",
+  auth,
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const card =
+        await selectSwipeCard(
+          req.user.id
+        );
+
+      const swipeCount =
+        await getUserSwipeCount(
+          req.user.id
+        );
+
+      if (!card) {
+        return res
+          .status(404)
+          .json({
+            error:
+              "NO_SWIPE_AVAILABLE",
+
+            swipes: {
+              count:
+                swipeCount,
+
+              uploadUnlocked:
+                swipeCount >=
+                SWIPE_UPLOAD_UNLOCK,
+
+              uploadUnlockAt:
+                SWIPE_UPLOAD_UNLOCK,
+            },
+          });
+      }
+
+      res.json({
+        cat: {
+          id:
+            card.cat.id,
+
+          name:
+            card.cat.name,
+
+          imageUrl:
+            imageUrlForCat(
+              card.cat
+            ),
+        },
+
+        question: {
+          key:
+            card.question.key,
+
+          text:
+            card.question.text,
+        },
+
+        recycled:
+          card.recycled,
+
+        swipes: {
+          count:
+            swipeCount,
+
+          uploadUnlocked:
+            swipeCount >=
+            SWIPE_UPLOAD_UNLOCK,
+
+          uploadUnlockAt:
+            SWIPE_UPLOAD_UNLOCK,
+        },
+      });
+    } catch (error) {
+      console.error(
+        "Swipe get error:",
+        error
+      );
+
+      res
+        .status(500)
+        .json({
+          error:
+            "SWIPE_ERROR",
+        });
+    }
+  }
+);
+
+app.post(
+  "/api/swipe",
+  auth,
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const catId =
+        req.body.catId;
+
+      const questionKey =
+        String(
+          req.body.questionKey ||
+            ""
+        );
+
+      const answer =
+        req.body.answer ===
+          true ||
+        req.body.answer ===
+          "true" ||
+        req.body.answer ===
+          1 ||
+        req.body.answer ===
+          "1";
+
+      const question =
+        questionByKey(
+          questionKey
+        );
+
+      if (
+        !catId ||
+        !question
+      ) {
+        return res
+          .status(400)
+          .json({
+            error:
+              "INVALID_SWIPE",
+          });
+      }
+
+      const catResult =
+        await pool.query(
+          `
+          SELECT *
+
+          FROM cats
+
+          WHERE id =
+            $1
+
+            AND status =
+              'APPROVED'
+
+            AND owner_id <>
+              $2
+
+          LIMIT 1
+          `,
+          [
+            catId,
+            req.user.id,
+          ]
+        );
+
+      if (
+        !catResult.rows.length
+      ) {
+        return res
+          .status(404)
+          .json({
+            error:
+              "CAT_NOT_FOUND",
+          });
+      }
+
+      const cat =
+        catResult.rows[0];
+
+      const beforeStats =
+        await getCatSwipeStats(
+          cat.id
+        );
+
+      await pool.query(
+        `
+        INSERT INTO swipes (
+          user_id,
+          cat_id,
+          question_key,
+          answer
+        )
+
+        VALUES (
+          $1,
+          $2,
+          $3,
+          $4
+        )
+        `,
+        [
+          req.user.id,
+          cat.id,
+          question.key,
+          answer,
+        ]
+      );
+
+      const swipeCount =
+        await getUserSwipeCount(
+          req.user.id
+        );
+
+      const afterStats =
+        await getCatSwipeStats(
+          cat.id
+        );
+
+      let uploadUnlockedNow =
+        false;
+
+      if (
+        swipeCount ===
+          SWIPE_UPLOAD_UNLOCK &&
+        !req.user
+          .upload_unlock_notified_at
+      ) {
+        uploadUnlockedNow =
+          true;
+
+        await pool.query(
+          `
+          UPDATE users
+
+          SET
+            upload_unlock_notified_at =
+              NOW(),
+
+            updated_at =
+              NOW()
+
+          WHERE id = $1
+          `,
+          [req.user.id]
+        );
+
+        await notifyUserByInternalId(
+          req.user.id,
+
+          `🎉 Теперь ты можешь загрузить своего кота!
+
+Сделай ${SWIPE_UPLOAD_UNLOCK} свайпов — готово.
+Открой вкладку «Мои коты» и отправь фото на модерацию. 🐈`
+        );
+      }
+
+      let battleUnlockedNow =
+        false;
+
+      if (
+        !beforeStats.battleEligible &&
+        afterStats.battleEligible &&
+        !cat.battle_unlock_notified_at
+      ) {
+        battleUnlockedNow =
+          true;
+
+        await pool.query(
+          `
+          UPDATE cats
+
+          SET
+            battle_unlock_notified_at =
+              NOW(),
+
+            updated_at =
+              NOW()
+
+          WHERE id = $1
+          `,
+          [cat.id]
+        );
+
+        await notifyUserByInternalId(
+          cat.owner_id,
+
+          `⚔️ ВЫ МОЖЕТЕ УЧАСТВОВАТЬ В БИТВАХ
+
+Кот ${cat.name} набрал «да» в ${SWIPE_BATTLE_UNLOCK} разных опросах.
+
+Теперь он может появляться в классических битвах КОТОБОРА! 🐈⚔️`
+        );
+      }
+
+      res.json({
+        success: true,
+
+        answer,
+
+        swipes: {
+          count:
+            swipeCount,
+
+          uploadUnlocked:
+            swipeCount >=
+            SWIPE_UPLOAD_UNLOCK,
+
+          uploadUnlockAt:
+            SWIPE_UPLOAD_UNLOCK,
+
+          uploadUnlockedNow,
+        },
+
+        cat: {
+          id:
+            cat.id,
+
+          battleEligible:
+            afterStats.battleEligible,
+
+          battleUnlockedNow,
+
+          distinctYes:
+            afterStats.distinctYes,
+
+          swipeScore:
+            Math.round(
+              afterStats.score *
+                1000
+            ) / 10,
+        },
+      });
+    } catch (error) {
+      console.error(
+        "Swipe post error:",
+        error
+      );
+
+      res
+        .status(500)
+        .json({
+          error:
+            "SWIPE_ERROR",
+        });
+    }
+  }
+);
 
 /* =========================================================
    BATTLE
@@ -3141,6 +3839,31 @@ app.post(
           });
       }
 
+      const swipeCount =
+        await getUserSwipeCount(
+          req.user.id
+        );
+
+      if (
+        swipeCount <
+        SWIPE_UPLOAD_UNLOCK
+      ) {
+        return res
+          .status(403)
+          .json({
+            error:
+              "UPLOAD_LOCKED",
+
+            swipes: {
+              count:
+                swipeCount,
+
+              uploadUnlockAt:
+                SWIPE_UPLOAD_UNLOCK,
+            },
+          });
+      }
+
       const imageKey =
         crypto
           .randomBytes(24)
@@ -3309,6 +4032,16 @@ app.post(
 
           OR loser_id =
             $1
+        `,
+        [catId]
+      );
+
+      await client.query(
+        `
+        DELETE FROM swipes
+
+        WHERE cat_id =
+          $1
         `,
         [catId]
       );
@@ -3496,6 +4229,13 @@ app.get(
 
             AND calibration_battles >=
               20
+
+            AND (
+              SELECT COUNT(DISTINCT question_key)
+              FROM swipes s
+              WHERE s.cat_id = cats.id
+                AND s.answer = TRUE
+            ) >= 8
 
           ORDER BY
             rating DESC
@@ -4083,9 +4823,9 @@ app.post(
 
         `✅ ВАШ КОТ ОДОБРЕН
 
-${cat.name} теперь участвует в КОТОБОРЕ.
+${cat.name} теперь в свайпах КОТОБОРА.
 
-Лимит: 20 голосов каждые 5 часов. 🐈⚔️`
+Наберите «да» в 8 разных опросах — и он сможет участвовать в битвах! 🐈`
       );
 
       res.json({
