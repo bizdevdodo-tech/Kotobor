@@ -55,6 +55,7 @@ const SHARE_BONUS = 5;
 const REFERRALS_FOR_UNLIMITED = 10;
 const SWIPE_UPLOAD_UNLOCK = 20;
 const SWIPE_BATTLE_UNLOCK = 8;
+const SWIPE_CAT_COOLDOWN = 8;
 const SWIPE_PRIOR_A = 1;
 const SWIPE_PRIOR_B = 1;
 
@@ -647,6 +648,61 @@ async function initDatabase() {
         TIMESTAMPTZ;
 
   `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS app_meta (
+      key TEXT PRIMARY KEY,
+      value TEXT,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  const resetKey =
+    "rating_reset_v1";
+
+  const already =
+    await pool.query(
+      `
+      SELECT 1
+      FROM app_meta
+      WHERE key = $1
+      LIMIT 1
+      `,
+      [resetKey]
+    );
+
+  if (!already.rows.length) {
+    await pool.query(`
+      UPDATE cats
+
+      SET
+        rating = 1000,
+        battles = 0,
+        wins = 0,
+        losses = 0,
+        calibration_battles = 0,
+        updated_at = NOW();
+    `);
+
+    await pool.query(`
+      DELETE FROM votes;
+    `);
+
+    await pool.query(
+      `
+      INSERT INTO app_meta (key, value)
+      VALUES ($1, $2)
+      `,
+      [
+        resetKey,
+        new Date().toISOString(),
+      ]
+    );
+
+    console.log(
+      "All cat ratings reset to 1000"
+    );
+  }
 
   console.log(
     "Database initialized"
@@ -1884,7 +1940,7 @@ async function selectSwipeCard(
       WHERE status = 'APPROVED'
         AND owner_id <> $1
       ORDER BY random()
-      LIMIT 150
+      LIMIT 200
       `,
       [userId]
     );
@@ -1911,41 +1967,147 @@ async function selectSwipeCard(
     )
   );
 
-  const freshCats = cats.filter(
-    (cat) => Number(cat.calibration_battles || 0) < 20
-  );
+  const recentResult =
+    await pool.query(
+      `
+      SELECT cat_id
+      FROM swipes
+      WHERE user_id = $1
+      ORDER BY id DESC
+      LIMIT 40
+      `,
+      [userId]
+    );
 
-  const poolCats =
-    Math.random() < 0.3 && freshCats.length
-      ? freshCats
-      : cats;
+  const recentCats = [];
 
-  for (let i = 0; i < 200; i++) {
+  for (const row of recentResult.rows) {
+    const id = String(row.cat_id);
+
+    if (!recentCats.includes(id)) {
+      recentCats.push(id);
+    }
+
+    if (
+      recentCats.length >=
+      SWIPE_CAT_COOLDOWN
+    ) {
+      break;
+    }
+  }
+
+  const cooldown =
+    new Set(recentCats);
+
+  const lastCatId =
+    recentCats[0] || null;
+
+  function pickFrom(poolList, allowCooldown) {
+    const filtered =
+      poolList.filter((cat) => {
+        const id =
+          String(cat.id);
+
+        if (
+          lastCatId &&
+          id === lastCatId
+        ) {
+          return false;
+        }
+
+        if (
+          !allowCooldown &&
+          cooldown.has(id)
+        ) {
+          return false;
+        }
+
+        return true;
+      });
+
+    if (!filtered.length) {
+      return null;
+    }
+
+    for (let i = 0; i < 120; i++) {
+      const cat =
+        filtered[
+          Math.floor(
+            Math.random() *
+              filtered.length
+          )
+        ];
+
+      const question =
+        SWIPE_QUESTIONS[
+          Math.floor(
+            Math.random() *
+              SWIPE_QUESTIONS.length
+          )
+        ];
+
+      const key =
+        `${cat.id}:${question.key}`;
+
+      if (!seen.has(key)) {
+        return {
+          cat,
+          question,
+          recycled: false,
+        };
+      }
+    }
+
     const cat =
-      poolCats[
-        Math.floor(Math.random() * poolCats.length)
+      filtered[
+        Math.floor(
+          Math.random() *
+            filtered.length
+        )
       ];
 
     const question =
       SWIPE_QUESTIONS[
-        Math.floor(Math.random() * SWIPE_QUESTIONS.length)
+        Math.floor(
+          Math.random() *
+            SWIPE_QUESTIONS.length
+        )
       ];
 
-    const key = `${cat.id}:${question.key}`;
-
-    if (!seen.has(key)) {
-      return { cat, question, recycled: false };
-    }
+    return {
+      cat,
+      question,
+      recycled: true,
+    };
   }
 
-  const cat =
-    cats[Math.floor(Math.random() * cats.length)];
-  const question =
-    SWIPE_QUESTIONS[
-      Math.floor(Math.random() * SWIPE_QUESTIONS.length)
-    ];
+  const freshCats = cats.filter(
+    (cat) =>
+      Number(
+        cat.calibration_battles || 0
+      ) < 20
+  );
 
-  return { cat, question, recycled: true };
+  const preferredPool =
+    Math.random() < 0.3 &&
+    freshCats.length
+      ? freshCats
+      : cats;
+
+  return (
+    pickFrom(
+      preferredPool,
+      false
+    ) ||
+    pickFrom(
+      cats,
+      false
+    ) ||
+    pickFrom(
+      cats,
+      true
+    )
+  );
 }
 
 /* =========================================================
