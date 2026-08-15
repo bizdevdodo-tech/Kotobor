@@ -53,7 +53,6 @@ const BASE_LIMIT = 10;
 const CAT_LIMIT = 20;
 const SHARE_BONUS = 5;
 const REFERRALS_FOR_UNLIMITED = 10;
-const SWIPE_UPLOAD_UNLOCK = 20;
 const SWIPE_BATTLE_UNLOCK = 8;
 const SWIPE_CAT_COOLDOWN = 8;
 const SWIPE_PRIOR_A = 1;
@@ -1641,9 +1640,9 @@ async function handleTelegramStart(
 
 У тебя есть 10 голосов каждые 5 часов.
 
-Сначала свайпай котов в ленте. После 20 свайпов можно загрузить своего кота.
+Свайпай котов в ленте и загружай своего в «Мои коты».
 
-Загрузишь кота — после модерации он попадёт в свайпы. Наберёт «да» в 8 разных опросах — откроются битвы.
+После модерации кот попадёт в свайпы. Наберёт «да» в 8 разных опросах — откроются битвы.
 
 Выбирай внимательно. Коты всё запомнят.`;
 
@@ -2508,11 +2507,7 @@ app.get(
             swipeCount,
 
           uploadUnlocked:
-            swipeCount >=
-            SWIPE_UPLOAD_UNLOCK,
-
-          uploadUnlockAt:
-            SWIPE_UPLOAD_UNLOCK,
+            true,
 
           battleUnlockAt:
             SWIPE_BATTLE_UNLOCK,
@@ -3027,11 +3022,7 @@ app.get(
                 swipeCount,
 
               uploadUnlocked:
-                swipeCount >=
-                SWIPE_UPLOAD_UNLOCK,
-
-              uploadUnlockAt:
-                SWIPE_UPLOAD_UNLOCK,
+                true,
             },
           });
       }
@@ -3066,11 +3057,7 @@ app.get(
             swipeCount,
 
           uploadUnlocked:
-            swipeCount >=
-            SWIPE_UPLOAD_UNLOCK,
-
-          uploadUnlockAt:
-            SWIPE_UPLOAD_UNLOCK,
+            true,
         },
       });
     } catch (error) {
@@ -3210,44 +3197,6 @@ app.post(
           cat.id
         );
 
-      let uploadUnlockedNow =
-        false;
-
-      if (
-        swipeCount ===
-          SWIPE_UPLOAD_UNLOCK &&
-        !req.user
-          .upload_unlock_notified_at
-      ) {
-        uploadUnlockedNow =
-          true;
-
-        await pool.query(
-          `
-          UPDATE users
-
-          SET
-            upload_unlock_notified_at =
-              NOW(),
-
-            updated_at =
-              NOW()
-
-          WHERE id = $1
-          `,
-          [req.user.id]
-        );
-
-        await notifyUserByInternalId(
-          req.user.id,
-
-          `🎉 Теперь ты можешь загрузить своего кота!
-
-Сделай ${SWIPE_UPLOAD_UNLOCK} свайпов — готово.
-Открой вкладку «Мои коты» и отправь фото на модерацию. 🐈`
-        );
-      }
-
       let battleUnlockedNow =
         false;
 
@@ -3296,13 +3245,7 @@ app.post(
             swipeCount,
 
           uploadUnlocked:
-            swipeCount >=
-            SWIPE_UPLOAD_UNLOCK,
-
-          uploadUnlockAt:
-            SWIPE_UPLOAD_UNLOCK,
-
-          uploadUnlockedNow,
+            true,
         },
 
         cat: {
@@ -4007,31 +3950,6 @@ app.post(
           .json({
             error:
               "INVALID_IMAGE",
-          });
-      }
-
-      const swipeCount =
-        await getUserSwipeCount(
-          req.user.id
-        );
-
-      if (
-        swipeCount <
-        SWIPE_UPLOAD_UNLOCK
-      ) {
-        return res
-          .status(403)
-          .json({
-            error:
-              "UPLOAD_LOCKED",
-
-            swipes: {
-              count:
-                swipeCount,
-
-              uploadUnlockAt:
-                SWIPE_UPLOAD_UNLOCK,
-            },
           });
       }
 
@@ -4837,6 +4755,190 @@ app.post(
 /* =========================================================
    MODERATION QUEUE
    ========================================================= */
+
+app.post(
+  "/api/admin/broadcast/no-cat",
+  auth,
+  requireRole(
+    "MODERATOR",
+    "OWNER"
+  ),
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const result =
+        await pool.query(
+          `
+          SELECT
+            u.id,
+            u.telegram_user_id
+
+          FROM users u
+
+          WHERE u.status =
+            'ACTIVE'
+
+            AND NOT EXISTS (
+              SELECT 1
+              FROM cats c
+              WHERE c.owner_id =
+                u.id
+                AND c.status IN (
+                  'PENDING',
+                  'APPROVED'
+                )
+            )
+          `
+        );
+
+      let sent = 0;
+      let failed = 0;
+
+      for (const user of result.rows) {
+        const ok =
+          await sendTelegramMessage(
+            user.telegram_user_id,
+
+            `🐱 ТВОЙ кот еще незагружен
+
+Открой КОТОБОР → «Мои коты» и загрузи фото.
+После модерации кот попадёт в свайпы, а в битвы — когда наберёт «да» в 8 разных опросах.`
+          );
+
+        if (ok) {
+          sent += 1;
+        } else {
+          failed += 1;
+        }
+
+        await sleep(40);
+      }
+
+      res.json({
+        success: true,
+        target:
+          result.rows.length,
+        sent,
+        failed,
+      });
+    } catch (error) {
+      console.error(
+        "Broadcast no-cat error:",
+        error
+      );
+
+      res
+        .status(500)
+        .json({
+          error:
+            "BROADCAST_ERROR",
+        });
+    }
+  }
+);
+
+app.post(
+  "/api/admin/broadcast/new-battles",
+  auth,
+  requireRole(
+    "MODERATOR",
+    "OWNER"
+  ),
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const result =
+        await pool.query(
+          `
+          SELECT DISTINCT
+            u.id,
+            u.telegram_user_id,
+            u.unlimited_until
+
+          FROM users u
+
+          JOIN cats c
+            ON c.owner_id =
+              u.id
+
+          WHERE u.status =
+            'ACTIVE'
+
+            AND c.status IN (
+              'PENDING',
+              'APPROVED'
+            )
+          `
+        );
+
+      let sent = 0;
+      let failed = 0;
+      let skipped = 0;
+
+      for (const user of result.rows) {
+        const votes =
+          await getVoteState(
+            user
+          );
+
+        const hasEnergy =
+          votes.unlimited ||
+          (
+            votes.remaining !==
+              null &&
+            votes.remaining > 0
+          );
+
+        if (!hasEnergy) {
+          skipped += 1;
+          continue;
+        }
+
+        const ok =
+          await sendTelegramMessage(
+            user.telegram_user_id,
+
+            `⚔️ Хватит спать - у нас новые БИТВЫ!
+
+Заходи в КОТОБОР и выбирай сильнейших. 🐈`
+          );
+
+        if (ok) {
+          sent += 1;
+        } else {
+          failed += 1;
+        }
+
+        await sleep(40);
+      }
+
+      res.json({
+        success: true,
+        target:
+          result.rows.length,
+        sent,
+        failed,
+        skipped,
+      });
+    } catch (error) {
+      console.error(
+        "Broadcast battles error:",
+        error
+      );
+
+      res
+        .status(500)
+        .json({
+          error:
+            "BROADCAST_ERROR",
+        });
+    }
+  }
+);
 
 app.get(
   "/api/admin/pending",
