@@ -691,7 +691,7 @@
       max-width: 520px;
       min-height: 76px;
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       padding:
         7px
         8px
@@ -702,7 +702,7 @@
     }
 
     .nav.admin-visible {
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(6, 1fr);
     }
 
     .nav-btn {
@@ -843,6 +843,102 @@
       gap: 8px;
       margin-top: 18px;
     }
+
+    .swipe-title {
+      text-align: center;
+      margin: 8px 0 14px;
+    }
+
+    .swipe-title strong {
+      display: block;
+      font-size: 22px;
+      font-weight: 950;
+      line-height: 1.25;
+    }
+
+    .swipe-title span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .swipe-card {
+      position: relative;
+      height: min(58vh, 460px);
+      overflow: hidden;
+      border-radius: 26px;
+      background: #151515;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    .swipe-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+    }
+
+    .swipe-gradient {
+      position: absolute;
+      inset: auto 0 0;
+      height: 48%;
+      background:
+        linear-gradient(
+          to top,
+          rgba(0,0,0,.92),
+          transparent
+        );
+    }
+
+    .swipe-cat-name {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 18px;
+      font-size: 24px;
+      font-weight: 950;
+    }
+
+    .swipe-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .swipe-actions .btn {
+      margin: 0;
+      min-height: 56px;
+      font-size: 18px;
+    }
+
+    .btn-no {
+      background: rgba(255,67,85,.14);
+      color: #ff8b97;
+      border: 1px solid rgba(255,67,85,.28);
+    }
+
+    .btn-yes {
+      background:
+        linear-gradient(
+          135deg,
+          var(--accent),
+          var(--accent2)
+        );
+      color: #120d0a;
+      border: 0;
+      font-weight: 950;
+    }
+
+    .swipe-progress {
+      margin-top: 12px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
   </style>
 </head>
 
@@ -883,6 +979,23 @@
     </div>
   </div>
 
+  <div id="unlockModal" class="group-modal">
+    <div class="group-card">
+      <div id="unlockEmoji" class="group-emoji">🎉</div>
+      <div id="unlockTitle" class="group-title"></div>
+      <div id="unlockText" class="group-text"></div>
+      <div class="group-actions">
+        <button
+          id="unlockOkBtn"
+          class="btn btn-primary"
+          type="button"
+        >
+          Понятно
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="app">
 
     <header class="header">
@@ -904,7 +1017,46 @@
 
     <main class="content">
 
-      <section id="page-battle" class="page active">
+      <section id="page-swipe" class="page active">
+
+        <div class="swipe-title">
+          <strong id="swipeQuestion">
+            Загружаем вопрос…
+          </strong>
+          <span>Свайпай. Только позитив.</span>
+        </div>
+
+        <div id="swipeLoading" class="loading">
+          Ищем кота…
+        </div>
+
+        <div id="swipeBox" class="hidden">
+          <div class="swipe-card">
+            <img id="swipeImage" alt="" />
+            <div class="swipe-gradient"></div>
+            <div id="swipeCatName" class="swipe-cat-name"></div>
+          </div>
+
+          <div class="swipe-actions">
+            <button id="swipeNo" class="btn btn-no" type="button">
+              Нет
+            </button>
+            <button id="swipeYes" class="btn btn-yes" type="button">
+              Да
+            </button>
+          </div>
+
+          <div id="swipeProgress" class="swipe-progress"></div>
+        </div>
+
+        <div id="swipeEmpty" class="card timer-box hidden">
+          Пока недостаточно котов для свайпов.
+          Загляни чуть позже.
+        </div>
+
+      </section>
+
+      <section id="page-battle" class="page">
 
         <div class="battle-title">
           <strong>Кто круче?</strong>
@@ -961,7 +1113,7 @@
         </div>
 
         <div class="section-subtitle">
-          Рейтинг формируется реальными сравнениями.
+          Рейтинг битв. В топ попадают коты после 8 разных «да» в свайпах.
         </div>
 
         <div id="rankingList" class="card ranking-list">
@@ -1137,7 +1289,12 @@
 
   <nav id="nav" class="nav">
 
-    <button class="nav-btn active" data-page="battle">
+    <button class="nav-btn active" data-page="swipe">
+      <span class="icon">💫</span>
+      Свайп
+    </button>
+
+    <button class="nav-btn" data-page="battle">
       <span class="icon">⚔️</span>
       Битва
     </button>
@@ -1242,9 +1399,52 @@
     const state = {
       me: null,
       battle: null,
+      swipe: null,
+      swipeBusy: false,
       timer: null,
       selectedImageData: null
     };
+
+    function showUnlockModal(
+      emoji,
+      title,
+      text
+    ) {
+      document.getElementById(
+        "unlockEmoji"
+      ).textContent = emoji;
+
+      document.getElementById(
+        "unlockTitle"
+      ).textContent = title;
+
+      document.getElementById(
+        "unlockText"
+      ).textContent = text;
+
+      document
+        .getElementById(
+          "unlockModal"
+        )
+        .classList.add("show");
+    }
+
+    function hideUnlockModal() {
+      document
+        .getElementById(
+          "unlockModal"
+        )
+        .classList.remove("show");
+    }
+
+    document
+      .getElementById(
+        "unlockOkBtn"
+      )
+      .addEventListener(
+        "click",
+        hideUnlockModal
+      );
 
     function hideGroupInvite() {
       document
@@ -1456,6 +1656,10 @@
               .getElementById(`page-${page}`)
               .classList.add("active");
 
+            if (page === "swipe") {
+              await loadSwipe();
+            }
+
             if (page === "battle") {
               await loadBattle();
             }
@@ -1599,6 +1803,178 @@
       el.textContent =
         `⚡ ${value.remaining}`;
     }
+
+    async function loadSwipe() {
+      const loading =
+        document.getElementById(
+          "swipeLoading"
+        );
+
+      const box =
+        document.getElementById(
+          "swipeBox"
+        );
+
+      const empty =
+        document.getElementById(
+          "swipeEmpty"
+        );
+
+      loading.classList.remove(
+        "hidden"
+      );
+
+      box.classList.add("hidden");
+      empty.classList.add("hidden");
+
+      try {
+        const data =
+          await api("/api/swipe");
+
+        state.swipe = data;
+        state.swipeBusy = false;
+
+        document.getElementById(
+          "swipeQuestion"
+        ).textContent =
+          data.question.text;
+
+        document.getElementById(
+          "swipeImage"
+        ).src =
+          data.cat.imageUrl;
+
+        document.getElementById(
+          "swipeCatName"
+        ).textContent =
+          data.cat.name;
+
+        const left =
+          Math.max(
+            0,
+            (data.swipes.uploadUnlockAt ||
+              20) -
+              (data.swipes.count || 0)
+          );
+
+        document.getElementById(
+          "swipeProgress"
+        ).textContent =
+          data.swipes.uploadUnlocked
+            ? `Свайпов: ${data.swipes.count} · загрузка кота открыта`
+            : `Свайпов: ${data.swipes.count} · до загрузки кота: ${left}`;
+
+        if (state.me?.swipes) {
+          state.me.swipes =
+            data.swipes;
+        }
+
+        loading.classList.add(
+          "hidden"
+        );
+
+        box.classList.remove(
+          "hidden"
+        );
+
+      } catch (error) {
+        loading.classList.add(
+          "hidden"
+        );
+
+        if (
+          error.data?.error ===
+          "NO_SWIPE_AVAILABLE"
+        ) {
+          empty.classList.remove(
+            "hidden"
+          );
+
+          return;
+        }
+
+        loading.classList.remove(
+          "hidden"
+        );
+
+        loading.textContent =
+          "Не удалось загрузить свайп.";
+      }
+    }
+
+    async function answerSwipe(yes) {
+      if (
+        !state.swipe ||
+        state.swipeBusy
+      ) {
+        return;
+      }
+
+      state.swipeBusy = true;
+
+      try {
+        const data =
+          await api(
+            "/api/swipe",
+            {
+              method: "POST",
+
+              body:
+                JSON.stringify({
+                  catId:
+                    state.swipe.cat.id,
+
+                  questionKey:
+                    state.swipe
+                      .question.key,
+
+                  answer: yes
+                })
+            }
+          );
+
+        if (state.me) {
+          state.me.swipes =
+            data.swipes;
+        }
+
+        if (
+          data.swipes
+            ?.uploadUnlockedNow
+        ) {
+          showUnlockModal(
+            "🎉",
+            "Теперь ты можешь загрузить своего кота",
+            "Открой «Мои коты» и отправь фото на модерацию. После одобрения кот попадёт в свайпы."
+          );
+        }
+
+        await loadSwipe();
+
+      } catch (error) {
+        console.error(error);
+
+        state.swipeBusy = false;
+
+        toast(
+          "Свайп не сохранился"
+        );
+      }
+    }
+
+    document
+      .getElementById("swipeYes")
+      .addEventListener(
+        "click",
+        () => answerSwipe(true)
+      );
+
+    document
+      .getElementById("swipeNo")
+      .addEventListener(
+        "click",
+        () => answerSwipe(false)
+      );
 
     async function loadBattle() {
       clearInterval(state.timer);
@@ -2142,6 +2518,36 @@
           );
 
         if (!cats.length) {
+          if (
+            !state.me?.swipes
+              ?.uploadUnlocked
+          ) {
+            const left =
+              Math.max(
+                0,
+                (state.me?.swipes
+                  ?.uploadUnlockAt ||
+                  20) -
+                  (state.me?.swipes
+                    ?.count || 0)
+              );
+
+            container.innerHTML = `
+              <div class="card" style="padding:18px;text-align:center;">
+                <div style="font-size:52px;">🔒</div>
+                <div style="margin-top:8px;font-size:22px;font-weight:950;">
+                  Загрузка пока закрыта
+                </div>
+                <div style="margin-top:8px;color:var(--muted);line-height:1.5;">
+                  Сделай ещё ${left} свайпов —
+                  и сможешь добавить своего кота.
+                </div>
+              </div>
+            `;
+
+            return;
+          }
+
           renderAddCatForm(
             container
           );
@@ -2215,7 +2621,13 @@
                 </div>
 
                 <div class="cat-thumb-status">
-                  ${statusName(cat.status)}
+                  ${
+                    cat.status === "PENDING"
+                      ? statusName(cat.status)
+                      : cat.battleEligible
+                        ? "Готов к битвам"
+                        : `Свайпы · да в ${cat.distinctYes || 0}/8`
+                  }
                 </div>
               </div>
             </button>
@@ -2233,6 +2645,30 @@
         </button>
       `;
 
+      const addBtn =
+        document.getElementById(
+          "addAnotherCat"
+        );
+
+      if (
+        !state.me?.swipes
+          ?.uploadUnlocked
+      ) {
+        addBtn.disabled = true;
+        addBtn.textContent =
+          "Сначала 20 свайпов";
+      } else {
+        addBtn.addEventListener(
+          "click",
+          () => {
+            renderAddCatForm(
+              container,
+              true
+            );
+          }
+        );
+      }
+
       container
         .querySelectorAll(
           ".cat-thumb"
@@ -2247,20 +2683,6 @@
             }
           );
         });
-
-      document
-        .getElementById(
-          "addAnotherCat"
-        )
-        .addEventListener(
-          "click",
-          () => {
-            renderAddCatForm(
-              container,
-              true
-            );
-          }
-        );
     }
 
     async function renderCatDetail(
@@ -2293,8 +2715,7 @@
           <div class="card" style="margin-top:14px;padding:18px;">
             <strong>Фото ожидает модерации</strong>
             <div style="margin-top:7px;color:var(--muted);line-height:1.45;">
-              Пока модератор не одобрит фотографию,
-              этот кот не появляется в битвах.
+              После одобрения кот попадёт в свайпы.
             </div>
           </div>
         `;
@@ -2302,11 +2723,46 @@
 
       if (
         cat.status === "APPROVED" &&
-        Number(cat.calibration_battles) < 20
+        !cat.battleEligible
       ) {
         extra = `
           <div class="card" style="margin-top:14px;padding:18px;">
-            <strong>Определяем место в рейтинге</strong>
+            <strong>Кот в свайпах</strong>
+            <div style="margin-top:7px;color:var(--muted);line-height:1.45;">
+              «Да» в разных опросах:
+              ${cat.distinctYes || 0} / 8
+              <br>
+              Шарм: ${cat.swipeScore ?? "—"}%
+              <br>
+              После 8 разных «да» откроются битвы.
+            </div>
+          </div>
+        `;
+      }
+
+      if (
+        cat.status === "APPROVED" &&
+        cat.battleEligible
+      ) {
+        extra = `
+          <div class="card" style="margin-top:14px;padding:18px;">
+            <strong>⚔️ Можно участвовать в битвах</strong>
+            <div style="margin-top:7px;color:var(--muted);line-height:1.45;">
+              Шарм: ${cat.swipeScore ?? "—"}%
+              · «да» в ${cat.distinctYes || 0} опросах
+            </div>
+          </div>
+        `;
+      }
+
+      if (
+        cat.status === "APPROVED" &&
+        Number(cat.calibration_battles) < 20 &&
+        cat.battleEligible
+      ) {
+        extra += `
+          <div class="card" style="margin-top:14px;padding:18px;">
+            <strong>Определяем место в рейтинге битв</strong>
             <div style="margin-top:7px;color:var(--muted);">
               ${cat.calibration_battles} / 20 сравнений
             </div>
@@ -2316,7 +2772,8 @@
 
       if (
         cat.status === "APPROVED" &&
-        Number(cat.calibration_battles) >= 20
+        Number(cat.calibration_battles) >= 20 &&
+        cat.battleEligible
       ) {
         try {
           const ranking =
@@ -2746,7 +3203,10 @@
         console.error(error);
 
         toast(
-          "Ошибка загрузки фотографии"
+          error.data?.error ===
+            "UPLOAD_LOCKED"
+            ? "Сначала сделай 20 свайпов"
+            : "Ошибка загрузки фотографии"
         );
 
       } finally {
@@ -3240,15 +3700,70 @@
     async function start() {
       try {
         await loadMe();
-        await loadBattle();
+        await loadSwipe();
         maybeShowGroupInvite();
+
+        if (
+          state.me?.swipes
+            ?.uploadUnlocked &&
+          !localStorage.getItem(
+            "kotobor_upload_unlock_seen"
+          )
+        ) {
+          try {
+            localStorage.setItem(
+              "kotobor_upload_unlock_seen",
+              "1"
+            );
+          } catch {}
+
+          if (
+            !(
+              state.me.cats &&
+              state.me.cats.length
+            )
+          ) {
+            showUnlockModal(
+              "🎉",
+              "Теперь ты можешь загрузить своего кота",
+              "Открой «Мои коты» и отправь фото на модерацию."
+            );
+          }
+        }
+
+        const unlockedCat =
+          (
+            state.me?.cats ||
+            []
+          ).find(
+            (cat) =>
+              cat.battleEligible &&
+              !localStorage.getItem(
+                `kotobor_battle_unlock_${cat.id}`
+              )
+          );
+
+        if (unlockedCat) {
+          try {
+            localStorage.setItem(
+              `kotobor_battle_unlock_${unlockedCat.id}`,
+              "1"
+            );
+          } catch {}
+
+          showUnlockModal(
+            "⚔️",
+            "ВЫ МОЖЕТЕ УЧАСТВОВАТЬ В БИТВАХ",
+            `Кот «${unlockedCat.name}» набрал «да» в разных опросах и теперь может участвовать в битвах.`
+          );
+        }
 
       } catch (error) {
         console.error(error);
 
         document
           .getElementById(
-            "battleLoading"
+            "swipeLoading"
           )
           .textContent =
             "Не удалось подключиться к КОТОБОРУ.";
